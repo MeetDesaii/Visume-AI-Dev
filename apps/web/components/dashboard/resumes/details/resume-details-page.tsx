@@ -4,6 +4,7 @@ import ResumeView from "./resume-view";
 import ResumeScores from "./resume-scores";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/hooks/use-api-client";
+import ResumeSuggestionsList from "./resume-suggestion-list";
 
 export default function ResumeDetailsPage({ id }: { id: string }) {
   const api = useApiClient();
@@ -44,15 +45,15 @@ export default function ResumeDetailsPage({ id }: { id: string }) {
   }
 
   return (
-    <div className="grid grid-cols-[0.52fr_1fr_0.4fr]">
-      <div className="border min-h-[calc(100vh_-_49px)]">
+    <div className="grid grid-cols-[0.5fr_1fr_0.6fr] gap-3">
+      <div className="bg-white rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
         <ResumeContent resume={resume} review={review} />
       </div>
-      <div className="border  min-h-[calc(100vh_-_49px)]">
+      <div className="bg-white rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
         <ResumeView resume={resume} />
       </div>
-      <div className="border min-h-[calc(100vh_-_49px)]">
-        <ResumeScores resumeScore={resume.resumeScore} />
+      <div className="bg-white rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
+        <ResumeSuggestionsList review={review} resume={resume} />
       </div>
     </div>
   );

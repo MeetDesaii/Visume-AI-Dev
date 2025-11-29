@@ -150,7 +150,7 @@ export function RegisterForm({
   return (
     <div
       className={cn(
-        "flex flex-col gap-6 bg-white rounded-2xl p-6 shadow",
+        "flex flex-col gap-6 bg-white dark:bg-black rounded-2xl p-6 drop-shadow-2xl",
         className
       )}
       {...props}

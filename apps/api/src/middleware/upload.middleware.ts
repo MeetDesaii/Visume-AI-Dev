@@ -62,14 +62,18 @@ const fileFilter = (
  * Multer upload middleware
  * Configured for resume uploads
  */
-export const uploadResume: any = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: MAX_FILE_SIZE,
-    files: 1, // Only one file at a time
-  },
-}).single("resume"); // Field name is "resume"
+const createSingleFileUpload = (fieldName: string) =>
+  multer({
+    storage,
+    fileFilter,
+    limits: {
+      fileSize: MAX_FILE_SIZE,
+      files: 1,
+    },
+  }).single(fieldName);
+
+export const uploadResume: any = createSingleFileUpload("resume");
+export const uploadLinkedInProfile: any = createSingleFileUpload("linkedinProfile");
 
 /**
  * Upload error handler middleware
@@ -130,7 +134,7 @@ export function validateFileUploaded(req: Request, res: any, next: any) {
   if (!req.file) {
     return res.status(400).json({
       error: "No file uploaded",
-      message: "Please upload a resume file (PDF, DOCX, DOC, or TXT)",
+      message: "Please upload a document (PDF, DOCX, DOC, or TXT)",
     });
   }
   next();

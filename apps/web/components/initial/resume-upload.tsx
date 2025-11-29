@@ -62,7 +62,13 @@ export default function ResumeUpload({
       </div>
 
       <div className="flex justify-between mt-8">
-        <Button variant="secondary" disabled={!file || isUploading}>
+        <Button
+          variant="secondary"
+          disabled={isUploading}
+          onClick={() => {
+            handleProgress(1, "JOB_FORM");
+          }}
+        >
           <ArrowLeft />
           Back
         </Button>

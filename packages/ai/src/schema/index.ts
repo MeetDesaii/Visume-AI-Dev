@@ -9,6 +9,10 @@ export {
   KeywordExtractionSchema,
 } from "./jobMatch";
 export {
+  type LinkedInProfile,
+  LinkedInProfileSchema,
+} from "./linkedinProfile";
+export {
   ResumeReviewSchema,
   ResumeReviewStatus,
   SuggestionsAcceptanceStatus,

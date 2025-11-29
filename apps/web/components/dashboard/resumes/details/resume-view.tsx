@@ -8,14 +8,14 @@ import { ScrollArea } from "@visume/ui/components/scroll-area";
 export default function ResumeView({ resume }: { resume: ResumeWithOutJob }) {
   return (
     <div className="h-full flex flex-col">
-      <div className="h-11 border-b bg-muted flex items-center px-4">
-        <div className="font-bold">
+      <div className="border-b px-4 py-3">
+        <h2 className="text-lg text-muted-foreground">
           {resume.job.company.name} - {resume.job.title}
-        </div>
+        </h2>
       </div>
 
-      <ScrollArea className="h-screen pb-30">
-        <div className="flex-1 overflow-y-auto bg-muted/30">
+      <ScrollArea className=" h-[calc(100vh_-_90px)]">
+        <div className="flex-1 overflow-y-auto p-6">
           <ResumeTextPreview text={resume.sourceInfo.rawText} />
         </div>
       </ScrollArea>

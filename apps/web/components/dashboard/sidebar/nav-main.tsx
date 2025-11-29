@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, } from "lucide-react";
 
 import {
   Collapsible,
@@ -17,6 +17,9 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@visume/ui/components/sidebar";
+import { Icon, IconProps } from "@tabler/icons-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function NavMain({
   items,
@@ -24,7 +27,7 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon?: LucideIcon;
+    icon?:  React.ForwardRefExoticComponent<IconProps & React.RefAttributes<Icon>>;
     isActive?: boolean;
     items?: {
       title: string;
@@ -32,6 +35,9 @@ export function NavMain({
     }[];
   }[];
 }) {
+
+  const pathname = usePathname()
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -45,13 +51,14 @@ export function NavMain({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+             <Link href={item.url}>
+                <SidebarMenuButton tooltip={item.title}  isActive={pathname === item.url} >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                   {item.items && item.items?.length > 0 && (
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   )}
-                </SidebarMenuButton>
+                </SidebarMenuButton></Link>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
