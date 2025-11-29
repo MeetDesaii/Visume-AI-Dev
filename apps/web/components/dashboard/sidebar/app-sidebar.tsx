@@ -24,6 +24,7 @@ import { NavUser } from "./nav-user";
 import { TeamSwitcher } from "./team-switcher";
 import { useUser } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
+import { IconCircleDashedCheck, IconFile, IconHome } from "@tabler/icons-react";
 
 // This is sample data.
 const data = {
@@ -51,9 +52,21 @@ const data = {
   ],
   navMain: [
     {
-      title: "Dashboard",
+      title: "Home",
       url: "/dashboard",
-      icon: Home,
+      icon: IconHome,
+      isActive: true,
+    },
+    {
+      title: "Resumes",
+      url: "/dashboard/resumes",
+      icon: IconFile,
+      isActive: true,
+    },
+    {
+      title: "Verify Resumes",
+      url: "/dashboard/verified-resumes",
+      icon: IconCircleDashedCheck,
       isActive: true,
     },
   ],

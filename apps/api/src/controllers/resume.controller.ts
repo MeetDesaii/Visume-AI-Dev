@@ -99,7 +99,7 @@ export const getAllResumes = asyncHandler(
     const resumes = await Resume.find({
       owner: userId,
     }).select(
-      "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata"
+      "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata createdAt updatedAt"
     );
 
     if (!resumes) return next(new AppError(400, "No resume found!"));

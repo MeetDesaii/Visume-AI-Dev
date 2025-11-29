@@ -12,6 +12,8 @@ export {
   ResumeExtractionJsonSchema,
   ResumeReviewSchema,
   ResumeReviewStatus,
+  LinkedInProfileSchema,
+  type LinkedInProfile,
   SuggestionsAcceptanceStatus,
   SuggestionsOperationAction,
   SuggestionsPriority,
@@ -22,4 +24,11 @@ export {
   KEYWORD_EXTRACTION_SYSTEM_PROMPT,
 } from "./prompts";
 
-export { extractResumeContent, tailorResumeContent } from "./services";
+export {
+  extractResumeContent,
+  tailorResumeContent,
+  runResumeLinkedInVerification,
+  type NormalizedResume,
+  type VerificationAgentResult,
+  type VerificationSectionScore,
+} from "./services";

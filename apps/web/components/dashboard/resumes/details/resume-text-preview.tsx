@@ -395,7 +395,7 @@ export function ResumeTextPreview({ text, className }: ResumeTextPreviewProps) {
     return (
       <div
         className={cn(
-          "flex items-center justify-center h-96 text-muted-foreground",
+          "flex items-center justify-center h-full text-muted-foreground",
           className
         )}
       >
@@ -406,8 +406,8 @@ export function ResumeTextPreview({ text, className }: ResumeTextPreviewProps) {
 
   return (
     <div className={cn("w-full h-full", className)}>
-      <div className="w-full h-full bg-muted shadow-sm">
-        <div className="h-full overflow-y-auto p-12 print:p-12">
+      <div className="w-full h-full  ">
+        <div className="h-full overflow-y-auto  ">
           <article aria-label="Resume preview">
             {/* Render header */}
             {renderHeader(parsedResume.header)}

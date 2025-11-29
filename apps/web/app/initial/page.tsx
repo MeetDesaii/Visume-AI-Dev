@@ -18,10 +18,6 @@ export type SetupProgress = {
 export default function InitialSetupPage() {
   const [resumeAndJobDetails, setResumeAndJobDetails] =
     useState<InitialSetupDetails>({} as InitialSetupDetails);
-  console.log(
-    "🚀 ~ InitialSetupPage ~ resumeAndJobDetails:",
-    resumeAndJobDetails
-  );
 
   const [progress, setProgress] = useState<SetupProgress>({
     step: 1,
@@ -50,26 +46,7 @@ export default function InitialSetupPage() {
         <h3 className="text-xl font-bold text-primary ">Visume AI</h3>
       </nav>
       <div className="max-w-xl grid place-content-center   min-h-[calc(100vh_-_200px)] space-y-10 container mx-auto">
-        {/* <div className="flex  gap-3">
-          <Button
-            variant={progress.step === 1 ? "default" : "secondary"}
-            onClick={() => handleProgress(1, "JOB_FORM")}
-          >
-            1
-          </Button>
-          <Button
-            variant={progress.step === 2 ? "default" : "secondary"}
-            onClick={() => handleProgress(2, "RESUME_UPLOAD_FORM")}
-          >
-            2
-          </Button>
-          <Button
-            variant={progress.step === 3 ? "default" : "secondary"}
-            onClick={() => handleProgress(3, "COMPLETED")}
-          >
-            3
-          </Button>
-        </div> */}
+
         <div>
           {progress.form === "JOB_FORM" && (
             <JobForm

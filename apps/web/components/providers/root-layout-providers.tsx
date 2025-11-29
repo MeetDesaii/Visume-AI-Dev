@@ -12,7 +12,7 @@ export function RootLayoutProviders({
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme="light"
       enableSystem
       disableTransitionOnChange
       enableColorScheme

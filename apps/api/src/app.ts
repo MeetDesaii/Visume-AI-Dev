@@ -15,6 +15,7 @@ import { errorHandler } from "./middleware/error.middleware";
 // Import routes
 import authRoutes from "./routes/auth.routes";
 import resumeRoutes from "./routes/resume.routes";
+import verificationRoutes from "./routes/verification.routes";
 import jobsRoutes from "./routes/job.routes";
 
 function initializeMiddlewares(app: Application): void {
@@ -101,6 +102,7 @@ function initializeRoutes(app: Application): void {
   app.use("/api/auth", authRoutes);
   app.use("/api/jobs", jobsRoutes);
   app.use("/api/resumes", resumeRoutes);
+  app.use("/api/verify", verificationRoutes);
 
   // API documentation
   app.get("/api", (req, res) => {

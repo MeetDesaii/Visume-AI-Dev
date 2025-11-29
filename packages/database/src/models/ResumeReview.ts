@@ -75,9 +75,9 @@ ResumeReviewSchema.virtual("durationSeconds").get(function (this: any) {
   return Math.round(this.durationMs / 1000);
 });
 
-// ============================================
+// =============================================
 // RESUME REVIEW STATIC METHODS
-// ============================================
+// =============================================
 ResumeReviewSchema.statics.findByResume = function (
   resumeId: Types.ObjectId
 ): Promise<[]> {

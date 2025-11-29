@@ -17,6 +17,7 @@ import { ResumeDTO } from "@visume/types";
 import { useRouter } from "next/navigation";
 import { useApiClient } from "@/hooks/use-api-client";
 import { useQuery } from "@tanstack/react-query";
+import { IconPlus } from "@tabler/icons-react";
 
 export default function ResumesPage() {
   const api = useApiClient();
@@ -51,47 +52,55 @@ export default function ResumesPage() {
   }
 
   return (
-    <section className="container mx-auto w-full max-w-7xl mt-10">
-      <div className="flex justify-between items-center ">
-        <h2 className="text-2xl">My Resumes</h2>
-        {/* <ResumeUploadDialog /> */}
+    <section className="bg-white h-[calc(100vh_-_90px)] rounded-2xl p-4 pt-10">
+      <div className="container mx-auto w-full max-w-7xl">
+        <div className="flex justify-between items-center ">
+          <h2 className="text-2xl">Recent Resumes</h2>
+          {/* <ResumeUploadDialog /> */}
 
-        {resumes.length !== 0 && (
-          <Link href="/initial">
-            <Button>
-              <Plus />
-              Create new resume
-            </Button>
-          </Link>
+          {resumes.length !== 0 && (
+            <Link href="/initial">
+              <Button size="lg">
+                <Plus />
+                Create new resume
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {resumes.length !== 0 ? (
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white border p-4 rounded-2xl min-h-40 flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
+              <div className="bg-primary/10 rounded-full size-15 grid place-content-center">
+                <IconPlus className="text-primary" />
+              </div>
+              <h2 className="mt-2 text-lg">Upload new resume</h2>
+            </div>
+            {resumes.map((resume) => (
+              <ResumeCard resume={resume} key={resume._id} />
+            ))}
+          </div>
+        ) : (
+          <Empty className="mt-10">
+            <EmptyHeader>
+              <EmptyMedia variant="icon" className="bg-secondary ">
+                <File />
+              </EmptyMedia>
+              <EmptyTitle>No Resumes</EmptyTitle>
+              <EmptyDescription>
+                You haven&apos;t added any resumes yet. Get started by uploading
+                your first resume.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button>
+                <Plus />
+                Add Resume
+              </Button>
+            </EmptyContent>
+          </Empty>
         )}
       </div>
-
-      {resumes.length !== 0 ? (
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {resumes.map((resume) => (
-            <ResumeCard resume={resume} key={resume._id} />
-          ))}
-        </div>
-      ) : (
-        <Empty className="mt-10">
-          <EmptyHeader>
-            <EmptyMedia variant="icon" className="bg-secondary ">
-              <File />
-            </EmptyMedia>
-            <EmptyTitle>No Resumes</EmptyTitle>
-            <EmptyDescription>
-              You haven&apos;t added any resumes yet. Get started by uploading
-              your first resume.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button>
-              <Plus />
-              Add Resume
-            </Button>
-          </EmptyContent>
-        </Empty>
-      )}
     </section>
   );
 }
