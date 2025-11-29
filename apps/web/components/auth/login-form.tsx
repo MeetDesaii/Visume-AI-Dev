@@ -72,7 +72,7 @@ export function LoginForm({
       throw new Error("Sign in incomplete");
     },
     onSuccess: () => {
-      router.push("/dashboard/resumes");
+      router.push("/dashboard");
     },
     onError: (error: ClerkError) => {
       // Extract error message from Clerk error format
@@ -100,7 +100,7 @@ export function LoginForm({
       await signIn.authenticateWithRedirect({
         strategy,
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/dashboard/resumes",
+        redirectUrlComplete: "/dashboard",
       });
     },
     onError: (error: ClerkError) => {
@@ -131,7 +131,7 @@ export function LoginForm({
   return (
     <div
       className={cn(
-        "flex flex-col gap-6 bg-background border dark:bg-black/50 backdrop-blur-sm rounded-2xl p-6 shadow dark:shadow-2xl",
+        "flex flex-col gap-6 bg-white border dark:bg-black/50 backdrop-blur-sm rounded-2xl p-6  drop-shadow-2xl",
         className
       )}
       {...props}

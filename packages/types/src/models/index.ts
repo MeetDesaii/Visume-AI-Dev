@@ -8,3 +8,4 @@ export * from "./resume";
 export * from "./resume-review";
 export * from "./suggestions";
 export * from "./job";
+export * from "./verification";

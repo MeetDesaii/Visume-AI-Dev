@@ -31,6 +31,7 @@ import { Button } from "@visume/ui/components/button";
 import { useUser } from "@clerk/nextjs";
 import { AppSidebar } from "../dashboard/sidebar/app-sidebar";
 import { format } from "date-fns";
+import { LoaderOne } from "@visume/ui/components/loader";
 
 interface DashboardProviderProps {
   children: ReactNode;
@@ -47,7 +48,7 @@ export default function DashboardProvider({
   const router = useRouter();
 
   useEffect(() => {
-    if (pathname.includes("/dashboard/resumes")) {
+    if (pathname.includes("editor") || pathname.includes("report")) {
       setIsSidebarOpen(false);
     }
   }, [pathname]);
@@ -56,7 +57,7 @@ export default function DashboardProvider({
     return (
       <div className="flex items-center justify-center min-h-screen flex-col gap-4">
         <p className="text-primary text-4xl">Visume AI</p>
-        <Loader2 className="animate-spin text-primary duration-150" size={40} />
+        <LoaderOne />
       </div>
     );
   }
@@ -70,13 +71,13 @@ export default function DashboardProvider({
     <SidebarProvider
       open={isSidebarOpen}
       onOpenChange={setIsSidebarOpen}
-      className="overflow-hidden h-screen"
+      className="overflow-hidden h-screen "
     >
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex justify-between h-[50px] shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b px-4 ">
+      <SidebarInset className="bg-background">
+        <header className="flex justify-between h-[50px] mt-2 mx-3 rounded-2xl bg-white shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b px-4 ">
           <div className="flex items-center gap-2 ">
-            <SidebarTrigger className="ml-1" />
+            <SidebarTrigger />
             <Separator
               orientation="vertical"
               className="mr-2 data-[orientation=vertical]:h-4"
@@ -134,8 +135,8 @@ export default function DashboardProvider({
             </DropdownMenu>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4">
-          <div className=" flex-1">{children}</div>
+        <div className="flex flex-1 flex-col rounded-2xl ">
+          <div className="flex-1 p-3">{children}</div>
         </div>
       </SidebarInset>
     </SidebarProvider>

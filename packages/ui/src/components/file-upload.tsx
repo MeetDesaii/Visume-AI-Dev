@@ -168,7 +168,7 @@ function FileUpload({
         <div
           {...getRootProps()}
           className={cn(
-            "flex justify-center rounded-xl bg-white border-2 mt-2 border-dashed px-6 py-12 transition-colors cursor-pointer",
+            "flex justify-center rounded-xl bg-white dark:bg-accent  border-2 mt-2 border-dashed px-6 py-12 transition-colors cursor-pointer",
             isDragActive && !isDragReject && "border-primary bg-primary/5",
             isDragReject && "border-destructive bg-destructive/5",
             !isDragActive && "border-input hover:border-primary/50"
@@ -216,7 +216,7 @@ function FileUpload({
         </p>
 
         {file && (
-          <Card className="relative mt-8 bg-white p-4 gap-4">
+          <Card className="relative mt-8 bg-white dark:bg-accent p-4 gap-4">
             <Button
               type="button"
               variant="ghost"

@@ -88,25 +88,12 @@ export default function ResumeContent({
 }) {
   return (
     <div>
-      <Tabs defaultValue="info">
-        <TabsList className="border-b w-full rounded-none">
-          <TabsTrigger value="info">
-            <Text />
-            Information
-          </TabsTrigger>
-          <TabsTrigger value="sugggestions">
-            <Sparkles />
-            Suggestions
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="info">
-          <ResumeInfoList resume={resume} />
-        </TabsContent>
-        <TabsContent value="sugggestions">
-          <ResumeSuggestionsList review={review} resume={resume} />
-        </TabsContent>
-      </Tabs>
+      <div className="border-b px-4 py-3">
+        <h2 className="text-lg text-muted-foreground">Information</h2>
+      </div>
+      <div className="p-4">
+        <ResumeInfoList resume={resume} />
+      </div>
     </div>
   );
 }
