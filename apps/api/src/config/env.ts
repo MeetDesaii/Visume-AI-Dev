@@ -94,6 +94,7 @@ export const config = {
 
   // AI Services
   openAiApiKey: process.env.OPENAI_API_KEY!,
+  firecrawlApiKey: process.env.FIRECRAWL_API_KEY,
 
   // Email
   smtp: {

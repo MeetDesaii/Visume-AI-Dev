@@ -24,7 +24,14 @@ import { NavUser } from "./nav-user";
 import { TeamSwitcher } from "./team-switcher";
 import { useUser } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/server";
-import { IconCircleDashedCheck, IconFile, IconHome } from "@tabler/icons-react";
+import {
+  IconBrandGithub,
+  IconBrandGithubFilled,
+  IconBrandLinkedinFilled,
+  IconCircleDashedCheck,
+  IconFile,
+  IconHome,
+} from "@tabler/icons-react";
 
 // This is sample data.
 const data = {
@@ -64,9 +71,15 @@ const data = {
       isActive: true,
     },
     {
-      title: "Verify Resumes",
+      title: "Verify with Linkdin",
       url: "/dashboard/verified-resumes",
-      icon: IconCircleDashedCheck,
+      icon: IconBrandLinkedinFilled,
+      isActive: true,
+    },
+    {
+      title: "Verify with Github",
+      url: "/dashboard/github-verified-resumes",
+      icon: IconBrandGithubFilled,
       isActive: true,
     },
   ],

@@ -31,4 +31,8 @@ export {
   type NormalizedResume,
   type VerificationAgentResult,
   type VerificationSectionScore,
+  runResumeGithubVerification,
+  type GithubVerificationAgentResult,
+  type GithubProjectVerification,
+  type NormalizedResumeWithProjects,
 } from "./services";

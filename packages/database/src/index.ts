@@ -5,3 +5,4 @@ export { ResumeReview } from "./models/ResumeReview";
 export { Suggestion } from "./models/Suggestions";
 export { LinkedInProfile } from "./models/LinkedInProfile";
 export { ResumeVerification } from "./models/ResumeVerification";
+export { GithubVerification } from "./models/GithubVerification";

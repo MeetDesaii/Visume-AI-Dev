@@ -3,10 +3,15 @@ import {
   LinkedInProfile as LinkedInProfileModel,
   Resume,
   ResumeVerification,
+  GithubVerification,
 } from "@visume/database";
-import { runResumeLinkedInVerification } from "@visume/ai-core";
+import {
+  runResumeGithubVerification,
+  runResumeLinkedInVerification,
+} from "@visume/ai-core";
 import { extractTextFromBuffer } from "@visume/lib";
 import {
+  GithubVerificationResponse,
   ResumeVerificationResponse,
   ResumeVerificationsResponse,
   VerifiedResumesResponse,
@@ -91,6 +96,85 @@ export const verifyResumeWithLinkedIn = asyncHandler(
   }
 );
 
+export const verifyResumeWithGithub = asyncHandler(
+  async (
+    req: Request,
+    res: Response<GithubVerificationResponse>,
+    next: NextFunction
+  ) => {
+    const resumeId = req.body.resumeId;
+    const providedGithubUrl = (req.body.githubProfileUrl as string) ?? "";
+    const userId = req.user?._id;
+
+    if (!userId) return next(new AppError(401, "User not found"));
+
+    if (!resumeId || !isValidMongoId(resumeId)) {
+      return next(new AppError(400, "A valid resumeId is required"));
+    }
+
+    const resume = await Resume.findOne({ _id: resumeId, owner: userId });
+    if (!resume) {
+      return next(new AppError(404, "Resume not found for this user"));
+    }
+
+    const githubProfileUrl =
+      providedGithubUrl.trim() ||
+      resume.profiles?.github ||
+      (resume.links || []).find(
+        (link) =>
+          typeof link === "string" &&
+          link.toLowerCase().includes("github.com")
+      ) ||
+      "";
+
+    if (!githubProfileUrl) {
+      return next(
+        new AppError(
+          400,
+          "GitHub profile link is required on the resume or request body"
+        )
+      );
+    }
+
+    const firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
+    if (!firecrawlApiKey) {
+      return next(new AppError(500, "FIRECRAWL_API_KEY is not configured"));
+    }
+
+    try {
+      const verificationResult = await runResumeGithubVerification({
+        resume: resume.toObject() as any,
+        githubProfileUrl,
+        firecrawlApiKey,
+      });
+
+      const verificationDoc = await GithubVerification.create({
+        owner: userId,
+        resume: resume._id,
+        githubProfileUrl: verificationResult.githubProfileUrl,
+        profileMarkdown: verificationResult.profileMarkdown,
+        projectResults: verificationResult.projectResults,
+        status: "COMPLETED",
+        overallScore: verificationResult.overallScore,
+        runMetadata: verificationResult.runMetadata,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: verificationDoc as any,
+      });
+    } catch (error) {
+      logger.error(error, "GitHub verification failed");
+      return next(
+        new AppError(
+          500,
+          (error as Error)?.message ?? "Unable to verify GitHub projects"
+        )
+      );
+    }
+  }
+);
+
 export const getResumeVerifications = asyncHandler(
   async (
     req: Request,
@@ -118,6 +202,36 @@ export const getResumeVerifications = asyncHandler(
     res.status(200).json({
       success: true,
       data: verifications as any,
+    });
+  }
+);
+
+export const getGithubVerifications = asyncHandler(
+  async (
+    req: Request,
+    res: Response<GithubVerificationResponse>,
+    next: NextFunction
+  ) => {
+    const userId = req.user?._id;
+    const resumeId = req.params.resumeId;
+
+    if (!userId) return next(new AppError(401, "User not found"));
+    if (!resumeId || !isValidMongoId(resumeId)) {
+      return next(new AppError(400, "A valid resumeId is required"));
+    }
+
+    const verification = await GithubVerification.findOne({
+      owner: userId,
+      resume: resumeId,
+    }).sort({ createdAt: -1 });
+
+    if (!verification) {
+      return next(new AppError(404, "No GitHub verification found"));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: verification as any,
     });
   }
 );

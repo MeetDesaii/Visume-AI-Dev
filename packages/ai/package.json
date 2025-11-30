@@ -27,6 +27,7 @@
     "@langchain/langgraph": "^0.2.24",
     "@langchain/openai": "^0.6.16",
     "@langchain/textsplitters": "^1.0.0",
+    "@mendable/firecrawl-js": "^1.29.3",
     "openai": "^6.3.0",
     "p-retry": "^7.1.0",
     "zod": "^3.25.76",
