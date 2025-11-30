@@ -7,7 +7,9 @@ import {
 } from "../middleware/upload.middleware";
 import {
   getAllVerifiedResumes,
+  getGithubVerifications,
   getResumeVerifications,
+  verifyResumeWithGithub,
   verifyResumeWithLinkedIn,
 } from "../controllers/verification.controller";
 
@@ -24,7 +26,10 @@ router.post(
   verifyResumeWithLinkedIn
 );
 
+router.post("/github", verifyResumeWithGithub);
+
 router.get("/resumes", getAllVerifiedResumes);
 router.get("/resume/:resumeId", getResumeVerifications);
+router.get("/github/:resumeId", getGithubVerifications);
 
 export default router;
