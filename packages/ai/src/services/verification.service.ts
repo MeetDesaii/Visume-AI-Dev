@@ -6,7 +6,6 @@ import {
   START,
   StateGraph,
 } from "@langchain/langgraph";
-import { AIMessage } from "@langchain/core/messages";
 import {
   createLLM,
   structuredExtract,
@@ -18,810 +17,665 @@ import {
   type ResumeExtraction,
 } from "../schema";
 
+// ---------------------------------------------------------------------------
+// 1. TYPES & CONFIGURATION
+// ---------------------------------------------------------------------------
+
 type ExperienceLike = {
   jobTitle: string;
   employerName: string;
-  location?: string;
-  startedAt?: string | Date | null;
-  endedAt?: string | Date | null;
+  startedAt?: string | null;
+  endedAt?: string | null;
   isCurrentPosition?: boolean;
-  role?: string;
-  achievements?: Array<{ text: string }>;
-  skills?: string[];
 };
 
 type EducationLike = {
   institutionName: string;
   degreeTypeName?: string;
   fieldOfStudyName?: string;
-  graduationAt?: string | Date | null;
-  description?: string;
-};
-
-type CertificationLike = {
-  title: string;
-  issuer?: string;
-  startDate?: string | Date | null;
-  expiryDate?: string | Date | null;
-  link?: string;
+  graduationAt?: string | null;
 };
 
 export type NormalizedResume = {
   firstName: string;
   lastName: string;
-  resumeName: string;
-  targetJobTitle?: string;
   email?: string;
   phoneNumber?: string;
-  location?: string;
-  summary?: string;
-  profiles?: { linkedin?: string; github?: string };
-  links?: string[];
-  skills: string[];
   workExperiences: ExperienceLike[];
   educations: EducationLike[];
-  certifications: CertificationLike[];
-};
-
-type VerificationState = {
-  resume: NormalizedResume;
-  linkedinText: string;
-  linkedinProfile: LinkedInProfile | null;
-  resumeAssertions: string[];
-  crossCheckFindings: string[];
 };
 
 export type VerificationSectionScore = {
-  section: string;
-  score: number; // 0 - 100
-  weight: number; // 0 - 1
+  section: "identity" | "experience" | "education" | "contact";
+  score: number;
+  weight: number;
   rationale: string;
-  coverage: number; // 0 - 1 coverage of section content
+  coverage: number;
 };
 
-export type VerificationAgentResult = {
+export type VerificationResult = {
   linkedinProfile: LinkedInProfile;
-  resumeAssertions: string[];
-  findings: string[];
+  findings: string;
   sectionScores: VerificationSectionScore[];
   overallScore: number;
   scoringMethod: string;
 };
 
-const DEFAULT_SCORING_METHOD = "weighted_similarity_v2";
 const SECTION_WEIGHTS = {
-  identity: 0.18,
-  contact: 0.12,
-  experience: 0.32,
-  education: 0.12,
-  skills: 0.16,
-  summary: 0.1,
+  experience: 0.4,
+  education: 0.4,
+  identity: 0.15,
+  contact: 0.05,
 } as const;
 
-function clamp01(value: number): number {
-  if (Number.isNaN(value)) return 0;
-  if (value < 0) return 0;
-  if (value > 1) return 1;
-  return value;
+// ---------------------------------------------------------------------------
+// 2. HELPERS
+// ---------------------------------------------------------------------------
+
+function normalizeString(str?: string): string {
+  return (str || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9 ]/g, "");
 }
 
-function safeWeightedAverage(
-  values: Array<{ value: number; weight: number }>
-): number {
-  const numerator = values.reduce(
-    (acc, { value, weight }) => acc + value * Math.max(weight, 0),
-    0
-  );
-  const denominator = values.reduce(
-    (acc, { weight }) => acc + Math.max(weight, 0),
-    0
-  );
-  if (denominator === 0) return 0;
-  return numerator / denominator;
+function tokenize(text: string): Set<string> {
+  return new Set(text.split(/\s+/).filter((t) => t.length > 2));
 }
 
-function normalizePhone(value?: string): string {
-  return value ? value.replace(/\D/g, "") : "";
-}
-
-function emailParts(email?: string): { local: string; domain: string } {
-  const clean = (email ?? "").trim().toLowerCase();
-  const [local = "", domain = ""] = clean.split("@");
-  return { local, domain };
-}
-
-function recencyWeight(
-  end?: string | Date | null,
-  isCurrent?: boolean
-): number {
-  const now = new Date();
-  const normalizedEnd =
-    !end || isCurrent
-      ? now
-      : new Date(normalizeDate(end) ?? now.toISOString());
-  if (Number.isNaN(normalizedEnd.getTime())) return 0.6;
-  const monthsAgo = Math.abs(monthDiff(normalizedEnd, now));
-  return clamp01(1 / (1 + monthsAgo / 36)); // decays after ~3 years
-}
-
-function durationInMonths(
-  start?: string | Date | null,
-  end?: string | Date | null
-): number | null {
-  const normalizedStart = normalizeDate(start ?? null);
-  const normalizedEnd = normalizeDate(end ?? null);
-  if (!normalizedStart || !normalizedEnd) return null;
-  const startDate = new Date(normalizedStart);
-  const endDate = new Date(normalizedEnd);
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-    return null;
-  }
-  return Math.max(0, monthDiff(startDate, endDate));
-}
-
-function durationCloseness(
-  aStart: string | Date | null,
-  aEnd: string | Date | null,
-  bStart: string | Date | null,
-  bEnd: string | Date | null
-): number {
-  const durA = durationInMonths(aStart, aEnd);
-  const durB = durationInMonths(bStart, bEnd);
-  if (durA === null || durB === null) return 0.35;
-  const diff = Math.abs(durA - durB);
-  const tolerance = Math.max(6, Math.min(durA, durB, 60));
-  return clamp01(1 - diff / tolerance);
-}
-
-function normalizeSkills(skills?: string[]): string[] {
-  return (skills ?? [])
-    .map((skill) => skill.toLowerCase().trim())
-    .filter(Boolean);
-}
-
-function achievementsText(
-  achievements?: Array<{ text?: string }> | string[]
-): string {
-  if (!achievements) return "";
-  return achievements
-    .map((item) => (typeof item === "string" ? item : item.text ?? ""))
-    .filter(Boolean)
-    .join(" ");
-}
-
-function nameSimilarity(
-  resume: NormalizedResume,
-  linkedinProfile: LinkedInProfile
-): number {
-  const fullResume = `${resume.firstName} ${resume.lastName}`.trim();
-  const fullLinkedIn = `${linkedinProfile.firstName} ${linkedinProfile.lastName}`.trim();
-  const fullMatch = stringSimilarity(fullResume, fullLinkedIn);
-  const firstMatch = stringSimilarity(resume.firstName, linkedinProfile.firstName);
-  const lastMatch = stringSimilarity(resume.lastName, linkedinProfile.lastName);
-  return clamp01(Math.max(fullMatch, 0.4 * fullMatch + 0.3 * firstMatch + 0.3 * lastMatch));
+function jaccardIndex(a: string, b: string): number {
+  const setA = tokenize(normalizeString(a));
+  const setB = tokenize(normalizeString(b));
+  if (setA.size === 0 && setB.size === 0) return 0;
+  let intersection = 0;
+  for (const token of setA) if (setB.has(token)) intersection++;
+  return intersection / (setA.size + setB.size - intersection);
 }
 
 function normalizeDate(value?: string | Date | null): string | null {
   if (!value) return null;
-  if (value instanceof Date) {
-    return Number.isNaN(value.getTime())
-      ? null
-      : value.toISOString().slice(0, 10);
-  }
-  const trimmed = String(value).trim();
-  if (!trimmed) return null;
-  if (/^\d{4}(-\d{2})?$/.test(trimmed)) return trimmed;
-  const parsed = new Date(trimmed);
-  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
-  return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
 }
 
-function tokenize(text?: string): string[] {
-  if (!text) return [];
-  return text
-    .toLowerCase()
-    .split(/[^a-z0-9\+]+/i)
-    .map((t) => t.trim())
-    .filter(Boolean);
+function dateScore(d1: string | null, d2: string | null): number {
+  if (!d1 && !d2) return 1;
+  if (!d1 || !d2) return 0.2;
+  const date1 = new Date(d1);
+  const date2 = new Date(d2);
+  const months = Math.abs(
+    (date2.getFullYear() - date1.getFullYear()) * 12 +
+      (date2.getMonth() - date1.getMonth())
+  );
+  if (months === 0) return 1.0;
+  if (months <= 1) return 0.95;
+  if (months <= 3) return 0.8;
+  if (months <= 6) return 0.5;
+  return 0.1;
 }
 
-function jaccardSimilarity(
-  a: string[] | Set<string>,
-  b: string[] | Set<string>
-): number {
-  const setA = a instanceof Set ? a : new Set(a);
-  const setB = b instanceof Set ? b : new Set(b);
-  if (setA.size === 0 && setB.size === 0) return 0;
-  let intersection = 0;
-  for (const token of setA) {
-    if (setB.has(token)) intersection += 1;
-  }
-  const union = setA.size + setB.size - intersection;
-  return union === 0 ? 0 : intersection / union;
-}
+// ---------------------------------------------------------------------------
+// 3. GRAPH STATE
+// ---------------------------------------------------------------------------
 
-function stringSimilarity(a?: string, b?: string): number {
-  return jaccardSimilarity(tokenize(a), tokenize(b));
-}
+const GraphState = Annotation.Root({
+  resume: Annotation<NormalizedResume>(),
+  linkedinText: Annotation<string>(),
+  linkedinProfile: Annotation<LinkedInProfile>(),
 
-function monthDiff(a: Date, b: Date): number {
-  const years = b.getFullYear() - a.getFullYear();
-  const months = b.getMonth() - a.getMonth();
-  return years * 12 + months;
-}
+  experienceReport: Annotation<string>({
+    default: () => "",
+    reducer: (curr, next) => next,
+  }),
+  educationReport: Annotation<string>({
+    default: () => "",
+    reducer: (curr, next) => next,
+  }),
+  mathScores: Annotation<{
+    sectionScores: VerificationSectionScore[];
+    overallScore: number;
+  }>({
+    reducer: (curr, next) => next,
+  }),
+});
 
-function dateClosenessScore(
-  aStart: string | null,
-  aEnd: string | null,
-  bStart: string | null,
-  bEnd: string | null
-): number {
-  const startA = aStart ? new Date(aStart) : null;
-  const startB = bStart ? new Date(bStart) : null;
-  const endA = aEnd ? new Date(aEnd) : null;
-  const endB = bEnd ? new Date(bEnd) : null;
+// ---------------------------------------------------------------------------
+// 4. NODES (With Updated Formatting Prompts)
+// ---------------------------------------------------------------------------
 
-  let accumulator = 0;
-  let parts = 0;
+const extractNode = async (state: typeof GraphState.State, config: any) => {
+  const profile = await structuredExtract({
+    schema: LinkedInProfileSchema,
+    input: [
+      { role: "system", content: "Extract LinkedIn profile data strictly." },
+      { role: "user", content: state.linkedinText },
+    ],
+    ...config.configurable?.llmOptions,
+  });
 
-  if (startA && startB) {
-    const diff = Math.abs(monthDiff(startA, startB));
-    accumulator += Math.max(0, 1 - diff / 24); // decay after 2 years
-    parts += 1;
-  }
-
-  if (endA && endB) {
-    const diff = Math.abs(monthDiff(endA, endB));
-    accumulator += Math.max(0, 1 - diff / 24);
-    parts += 1;
-  }
-
-  return parts === 0 ? 0.25 : accumulator / parts;
-}
-
-function normalizeResumeInput(
-  resume: ResumeExtraction | NormalizedResume
-): NormalizedResume {
-  const normalizedSkills =
-    (resume as ResumeExtraction).skills?.map(
-      (s: any) => (s as any).name || s
-    ) ??
-    (resume as NormalizedResume).skills ??
-    [];
-
-  const workExperiences =
-    (resume as any).workExperiences?.map((exp: any) => ({
-      jobTitle: exp.jobTitle ?? "",
-      employerName: exp.employerName ?? "",
-      location: exp.location ?? "",
-      startedAt: normalizeDate(exp.startedAt ?? null),
-      endedAt: normalizeDate(exp.endedAt ?? null),
-      isCurrentPosition: Boolean(exp.isCurrentPosition),
-      role: exp.role ?? "",
-      achievements: (exp.achievements ?? []).map((a: any) => ({
-        text: a.text ?? a ?? "",
-      })),
-      skills: exp.skills ?? [],
-    })) ?? [];
-
-  const educations =
-    (resume as any).educations?.map((edu: any) => ({
-      institutionName: edu.institutionName ?? "",
-      degreeTypeName: edu.degreeTypeName ?? "",
-      fieldOfStudyName: edu.fieldOfStudyName ?? "",
-      graduationAt: normalizeDate(edu.graduationAt ?? null),
-      description: edu.description ?? "",
-    })) ?? [];
-
-  const certifications =
-    (resume as any).certifications?.map((cert: any) => ({
-      title: cert.title ?? "",
-      issuer: cert.issuer ?? "",
-      startDate: normalizeDate(cert.startDate ?? null),
-      expiryDate: normalizeDate(cert.expiryDate ?? null),
-      link: cert.link ?? "",
-    })) ?? [];
-
-  return {
-    firstName: (resume as any).firstName ?? "",
-    lastName: (resume as any).lastName ?? "",
-    resumeName: (resume as any).resumeName ?? "",
-    targetJobTitle:
-      (resume as any).targetJobTitle ?? (resume as any).resumeName,
-    email: (resume as any).email ?? "",
-    phoneNumber: (resume as any).phoneNumber ?? "",
-    location: (resume as any).location ?? "",
-    summary: (resume as any).summary ?? "",
-    profiles: (resume as any).profiles ?? {},
-    links: (resume as any).links ?? [],
-    skills: normalizedSkills,
-    workExperiences,
-    educations,
-    certifications,
-  };
-}
-
-function normalizeLinkedInProfile(profile: LinkedInProfile): LinkedInProfile {
-  return {
+  const normalizedProfile: LinkedInProfile = {
     ...profile,
-    experiences: profile.experiences.map((exp) => ({
-      ...exp,
-      startedAt: normalizeDate(exp.startedAt) ?? null,
-      endedAt: normalizeDate(exp.endedAt) ?? null,
-      achievements: exp.achievements ?? [],
-      skills: exp.skills ?? [],
+    experiences: profile.experiences.map((e: any) => ({
+      ...e,
+      startedAt: normalizeDate(e.startedAt) ?? undefined,
+      endedAt: normalizeDate(e.endedAt) ?? undefined,
     })),
-    educations: profile.educations.map((edu) => ({
-      ...edu,
-      graduationAt: normalizeDate(edu.graduationAt) ?? null,
+    educations: profile.educations.map((e: any) => ({
+      ...e,
+      graduationAt: normalizeDate(e.graduationAt) ?? undefined,
     })),
-    certifications: profile.certifications.map((cert) => ({
-      ...cert,
-      startDate: normalizeDate(cert.startDate) ?? null,
-      expiryDate: normalizeDate(cert.expiryDate) ?? null,
-    })),
-    skills: profile.skills ?? [],
-    languages: profile.languages ?? [],
-    accomplishments: profile.accomplishments ?? [],
-    websites: profile.websites ?? [],
   };
-}
 
-function parseBulletList(message?: string): string[] {
-  if (!message) return [];
-  return message
-    .split(/\n+/)
-    .map((line) => line.replace(/^[\s\-*\d.]+\s*/, "").trim())
-    .filter(Boolean);
-}
+  return { linkedinProfile: normalizedProfile };
+};
 
-function toText(content: AIMessage["content"]): string {
-  if (typeof content === "string") return content;
-  if (Array.isArray(content)) {
-    return content
-      .map((part) =>
-        typeof part === "string" ? part : ((part as any).text ?? "")
-      )
-      .join("");
-  }
-  return "";
-}
+const experienceVerifierNode = async (
+  state: typeof GraphState.State,
+  config: any
+) => {
+  const llm = createLLM({ ...config.configurable?.llmOptions, temperature: 0 });
 
-function bestExperienceScore(
-  exp: ExperienceLike,
-  linkedinExperiences: LinkedInProfile["experiences"]
-): { score: number; weight: number } {
-  if (linkedinExperiences.length === 0) return { score: 0, weight: 0 };
+  const prompt = `
+  You are a **Senior Background Check Analyst**.
 
-  let bestScore = 0;
-  let bestWeight = 0.5;
+Your goal is to compare the Work Experience sections from a candidate’s **Resume** and **LinkedIn profile** and produce a **clean, spacious Markdown report**.
 
-  for (const liExp of linkedinExperiences) {
-    const titleSim = stringSimilarity(exp.jobTitle, liExp.title);
-    const companySim = stringSimilarity(exp.employerName, liExp.companyName);
-    const locationSim = stringSimilarity(
-      exp.location ?? "",
-      (liExp as any).location ?? ""
-    );
-    const datesSim = dateClosenessScore(
-      normalizeDate(exp.startedAt ?? null),
-      normalizeDate(exp.endedAt ?? null),
-      liExp.startedAt ?? null,
-      liExp.endedAt ?? null
-    );
-    const durationSim = durationCloseness(
-      normalizeDate(exp.startedAt ?? null),
-      normalizeDate(exp.endedAt ?? null),
-      liExp.startedAt ?? null,
-      liExp.endedAt ?? null
-    );
-    const skillsSim = jaccardSimilarity(
-      normalizeSkills(exp.skills),
-      normalizeSkills(liExp.skills)
-    );
-    const achievementsSim = stringSimilarity(
-      achievementsText(exp.achievements),
-      achievementsText(liExp.achievements)
-    );
+---
 
-    const composite = clamp01(
-      0.34 * titleSim +
-        0.24 * companySim +
-        0.14 * datesSim +
-        0.1 * skillsSim +
-        0.08 * durationSim +
-        0.05 * achievementsSim +
-        0.05 * locationSim
-    );
+### INPUT DATA
 
-    if (composite > bestScore) {
-      bestScore = composite;
-      bestWeight = recencyWeight(liExp.endedAt ?? null, (liExp as any).isCurrentPosition);
+RESUME_EXPERIENCES (JSON):
+
+${JSON.stringify(state.resume.workExperiences)}
+
+LINKEDIN_EXPERIENCES (JSON):
+
+${JSON.stringify(state.linkedinProfile.experiences)}
+
+Both inputs are arrays of work experience objects. Use only the data provided; do **not** invent or assume missing values.
+
+---
+
+### OVERALL OUTPUT REQUIREMENTS (VERY STRICT)
+
+- Output **valid Markdown only**.
+- Do **not** wrap the entire answer in code fences.
+- Do **not** include any explanations about what you are doing.
+- The response must contain **only**:
+  1. The heading ### 💼 Experience Verification
+  2. The Markdown table
+  3. The analysis section (heading + bulleted list)
+- Other then the three parts heading, table and analysis you can add **one** or **two** parts of your own if needed but those parts are **needed**
+
+---
+
+### 1. STRUCTURE
+
+1. First line must be:
+
+   ### 💼 Experience Verification
+
+2. Immediately after the heading, output a **Markdown table**.
+
+3. After the table, output an **"Analysis" section** as a bulleted list of observations.
+
+---
+
+### 2. TABLE FORMAT
+
+**Table header (fixed, exactly this):**
+
+| Company | Role | Resume Timeline | LinkedIn Timeline | Status |
+| --- | --- | --- | --- | --- |
+
+**Columns:**
+
+1. **Company**
+   - Use the company/employer name from the respective record(s).
+   - If the company name is very long (over ~40–50 characters), insert a <br> at a sensible word boundary to improve readability.
+   - Example: Very Long Company Name Pvt Ltd <br> International Division.
+
+2. **Role**
+   - Use the job title (e.g., “Software Engineer”, “Senior Data Analyst”).
+   - If missing, use —.
+
+3. **Resume Timeline**
+   - Combine **start date** and **end date** from the resume entry into a single string:
+     - Format: START_DATE - END_DATE.
+   - **DATE FORMAT (preferred)**:
+     - Use D MMM YYYY when day, month, and year are available.  
+       Example: 1 Jan 2022.
+   - **Fallback rules (if parts of the date are missing)**:
+     - If only month and year are available: MMM YYYY (e.g., Jan 2022).
+     - If only year is available: YYYY (e.g., 2022).
+   - If the end date is missing but the role is marked as current (or equivalent):
+     - Use START_DATE - Present.
+   - If a date cannot be parsed at all, use — for that side of the range.
+   - Examples:
+     - 1 Jan 2022 - 1 Dec 2022
+     - Jan 2022 - Present
+     - 2020 - 2022
+
+4. **LinkedIn Timeline**
+   - Same formatting and combination rules as “Resume Timeline”:
+     - START_DATE - END_DATE or START_DATE - Present.
+     - Use D MMM YYYY when possible, otherwise fall back to MMM YYYY or YYYY.
+     - Use — if a date is missing or not parseable.
+   - Examples:
+     - 1 Jan 2022 - 1 Dec 2022
+     - Mar 2020 - Present
+     - 2018 - 2020
+
+5. **Status**
+   - Use **only** one of these icons:
+     - ✅ — Experience entry matches reasonably well between Resume and LinkedIn.
+     - ⚠️ — Partial or minor discrepancies (e.g., slightly different job title, small date differences, differing employment type).
+     - ❌ — Clear conflict or major discrepancy (e.g., different company, very different timelines, appears only on one source).
+   - The cell must contain **only** the icon, no text.
+
+---
+
+### 3. MATCHING LOGIC (IMPORTANT)
+
+- Try to **match work experience entries** between Resume and LinkedIn using:
+  - **Company name** (case-insensitive, ignoring punctuation and common variations like “Ltd”, “LLC”, “Inc.” when possible).
+  - **Role title similarity** (e.g., “Software Engineer” ~ “Software Engineer I”, “Senior Analyst” ~ “Sr. Analyst”).
+  - **Timeline overlap** (similar or overlapping date ranges).
+  - Optionally, **location** if available and helpful (but don’t require it).
+
+- For each matched pair (Resume + LinkedIn):
+  - Show them in a **single row**.
+  - Fill both "Resume Timeline" and "LinkedIn Timeline".
+  - Set the **Status** based on how closely they match.
+
+- For entries that exist **only in Resume** (no reasonable match found in LinkedIn):
+  - Create a row where:
+    - Resume fields are filled.
+    - LinkedIn timeline is —.
+    - Status is usually ❌ (or ⚠️ if it could plausibly be an omission or incomplete LinkedIn profile).
+
+- For entries that exist **only in LinkedIn**:
+  - Create a row where:
+    - LinkedIn fields are filled.
+    - Resume timeline is —.
+    - Status is usually ❌ (or ⚠️ if it could plausibly be an omission or incomplete resume).
+
+- If LinkedIn has a **single aggregated role** (e.g., “Company X – 3 positions”) but the resume has separate roles, or vice versa:
+  - Match them **as best as possible** based on titles and dates.
+  - If the mapping is unclear, prefer separate rows with ⚠️ or ❌ rather than forcing an incorrect match.
+
+- If you cannot confidently match entries, treat
+
+  `;
+
+  const response = await llm.invoke([{ role: "user", content: prompt }]);
+  return { experienceReport: response.content as string };
+};
+
+const educationVerifierNode = async (
+  state: typeof GraphState.State,
+  config: any
+) => {
+  const llm = createLLM({ ...config.configurable?.llmOptions, temperature: 0 });
+
+  const prompt = `You are an **Education Verification Specialist**.
+
+Your goal is to compare the Education sections from a candidate’s **Resume** and **LinkedIn profile** and produce a **clean, spacious Markdown report**.
+
+---
+
+### INPUT DATA
+
+RESUME_EDUCATIONS (JSON):
+
+${JSON.stringify(state.resume.educations)}
+
+LINKEDIN_EDUCATIONS (JSON):
+
+${JSON.stringify(state.linkedinProfile.educations)}
+
+Both inputs are arrays of education objects. Use only the data provided; do **not** invent or assume missing values.
+
+---
+
+### OVERALL OUTPUT REQUIREMENTS (VERY STRICT)
+
+- Output **valid Markdown only**.
+- Do **not** wrap the entire answer in code fences.
+- Do **not** include any explanations about what you are doing.
+- The response must contain **only**:
+  1. The heading ### 🎓 Education Verification
+  2. The Markdown table
+  3. The analysis section (bulleted list)
+- Other then the three parts heading, table and analysis you can add **one** or **two** parts of your own if needed but those parts are **needed**
+
+---
+
+### 1. STRUCTURE
+
+1. First line must be:
+
+   ### 🎓 Education Verification
+
+2. Immediately after the heading, output a **Markdown table**.
+
+3. After the table, output an **"Analysis" section** as a bulleted list of observations.
+
+---
+
+### 2. TABLE FORMAT
+
+**Table header (fixed, exactly this):**
+
+| Institution | Degree | Grad Year in Resume | Grad Year in LinkedIn | Status |
+| --- | --- | --- | --- | --- |
+
+**Columns:**
+
+1. **Institution**
+   - Use the institution name from the respective record(s).
+   - If the institution name is very long (over ~40–50 characters), insert a <br> at a sensible word boundary to improve readability.
+   - Example: University of Really Long Name <br> Department of Computer Science.
+
+2. **Degree**
+   - Use the degree or qualification name (e.g., “BSc Computer Science”, “Master of Business Administration”).
+   - If missing, use —.
+
+3. **Grad Year in Resume**
+   - Extract the **end/completion date** from the resume entry.
+   - Format as:
+     - D MMM YYYY if day and month are available (e.g., 1 May 2023).
+     - MMM YYYY if only month and year are available (e.g., May 2023).
+     - YYYY if only year is available (e.g., 2023).
+   - If there is no end date or it cannot be parsed, use —.
+
+4. **Grad Year in LinkedIn**
+   - Same formatting rules as “Grad Year in Resume”.
+   - If missing or not parseable, use —.
+
+5. **Status**
+   - Use **only** one of these icons:
+     - ✅  — Education entry matches reasonably well between Resume and LinkedIn.
+     - ⚠️  — Partial or minor discrepancies (e.g., slightly different degree name, minor date differences).
+     - ❌  — Clear conflict or major discrepancy (e.g., different institution, very different dates, appears only on one source).
+   - The cell must contain **only** the icon, no text.
+
+---
+
+### 3. MATCHING LOGIC (IMPORTANT)
+
+- Try to **match education entries** between Resume and LinkedIn using:
+  - Institution name (case-insensitive, ignoring punctuation and common stopwords like “University of”, “College of”, etc., when possible).
+  - Degree/qualification similarity (e.g., “BSc Computer Science” ~ “Bachelor of Science in Computer Science”).
+  - Overlapping or similar graduation years.
+
+- For each matched pair (Resume + LinkedIn):
+  - Show them in a **single row**.
+  - Fill both "Grad Year in Resume" and "Grad Year in LinkedIn".
+  - Set the **Status** based on how closely they match.
+
+- For entries that exist **only in Resume** (no reasonable match found in LinkedIn):
+  - Create a row where:
+    - Resume fields are filled.
+    - LinkedIn grad year is —.
+    - Status is usually ❌ (or ⚠️ if it could plausibly be an incomplete profile).
+
+- For entries that exist **only in LinkedIn**:
+  - Create a row where:
+    - LinkedIn fields are filled.
+    - Resume grad year is —.
+    - Status is usually ❌ (or ⚠️ if it could plausibly be an omission).
+
+- If you cannot confidently match entries, treat them as separate rows instead of forcing a match.
+
+---
+
+### 4. ANALYSIS SECTION
+
+After the table, add a blank line and then:
+
+#### Analysis
+
+Then provide a bulleted list with your key findings.
+
+Formatting rules:
+
+- Use - for bullets.
+- Add **one empty line** between each bullet for readability.
+- **Bold** key discrepancies and important phrases.
+
+Content guidelines:
+
+- Highlight:
+  - **Institution name mismatches** (e.g., abbreviations vs. full names, completely different institutions).
+  - **Different graduation dates or years**.
+  - Entries **present only in Resume** or **only in LinkedIn**.
+  - Any **suspicious patterns** (e.g., overlapping degrees that seem unlikely, inconsistent degree levels).
+
+- Example bullet style:
+
+  - **Graduation year mismatch** for ABC University: Resume shows **2019**, LinkedIn shows **2020**.
+
+  
+  - Degree title differs for XYZ College: Resume lists **"BSc Computer Science"**, LinkedIn lists **"Bachelor of Science in Computer Science"** (likely the same degree, minor wording difference).
+
+  
+  - **Education entry present only in LinkedIn**: Master’s degree at **DEF University** is not mentioned in the resume.
+
+- If everything aligns well, explicitly state that there are no major discrepancies.
+
+---
+
+### 5. GENERAL BEHAVIOR
+
+- Do **not** invent institutions, degrees, or dates.
+- If a date cannot be parsed, show — in the table and explain it in the Analysis if relevant.
+- Keep the tone neutral and factual.
+- The response must be complete in a **single pass** and fully compliant with the structure and formatting above.
+`;
+
+  const response = await llm.invoke([{ role: "user", content: prompt }]);
+  return { educationReport: response.content as string };
+};
+
+const scoringNode = async (state: typeof GraphState.State) => {
+  const resume = state.resume;
+  const li = state.linkedinProfile;
+
+  // 1. Experience Score
+  const expScores = resume.workExperiences.map((rExp) => {
+    let best = 0;
+    for (const lExp of li.experiences) {
+      const companyScore = jaccardIndex(rExp.employerName, lExp.companyName);
+      const titleScore = jaccardIndex(rExp.jobTitle, lExp.title);
+      const startScore = dateScore(
+        rExp.startedAt || null,
+        lExp.startedAt || null
+      );
+
+      let endScore = 0;
+      if (rExp.isCurrentPosition) {
+        // If resume says Current, LinkedIn must have no end date or be marked current
+        endScore = !lExp.endedAt ? 1 : 0;
+      } else {
+        endScore = dateScore(rExp.endedAt || null, lExp.endedAt || null);
+      }
+
+      const combined =
+        companyScore * 0.4 +
+        titleScore * 0.3 +
+        startScore * 0.15 +
+        endScore * 0.15;
+      if (combined > best) best = combined;
     }
-  }
+    return best;
+  });
+  const expFinal = expScores.length
+    ? expScores.reduce((a, b) => a + b, 0) / expScores.length
+    : 0;
 
-  return { score: bestScore, weight: bestWeight };
-}
-
-function bestEducationScore(
-  edu: EducationLike,
-  linkedinEducations: LinkedInProfile["educations"]
-): { score: number; weight: number } {
-  if (linkedinEducations.length === 0) return { score: 0, weight: 0 };
-  let bestScore = 0;
-  let bestWeight = 0.5;
-
-  for (const liEdu of linkedinEducations) {
-    const schoolSim = stringSimilarity(
-      edu.institutionName,
-      liEdu.institutionName
-    );
-    const degreeSim = stringSimilarity(
-      `${edu.degreeTypeName ?? ""}`.trim(),
-      `${liEdu.degreeTypeName ?? ""}`.trim()
-    );
-    const fieldSim = stringSimilarity(
-      `${edu.fieldOfStudyName ?? ""}`,
-      `${liEdu.fieldOfStudyName ?? ""}`
-    );
-    const dateSim = dateClosenessScore(
-      normalizeDate(edu.graduationAt ?? null),
-      normalizeDate(edu.graduationAt ?? null),
-      liEdu.graduationAt ?? null,
-      liEdu.graduationAt ?? null
-    );
-    const locationSim = stringSimilarity(
-      (edu as any).location ?? "",
-      (liEdu as any).location ?? ""
-    );
-
-    const score = clamp01(
-      0.42 * schoolSim +
-        0.28 * degreeSim +
-        0.15 * fieldSim +
-        0.1 * dateSim +
-        0.05 * locationSim
-    );
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestWeight = recencyWeight(liEdu.graduationAt ?? null, false);
+  // 2. Education Score
+  const eduScores = resume.educations.map((rEdu) => {
+    let best = 0;
+    for (const lEdu of li.educations) {
+      const school = jaccardIndex(rEdu.institutionName, lEdu.institutionName);
+      const degree = jaccardIndex(
+        rEdu.degreeTypeName || "",
+        lEdu.degreeTypeName || ""
+      );
+      const val = school * 0.6 + degree * 0.4;
+      if (val > best) best = val;
     }
-  }
+    return best;
+  });
+  const eduFinal = eduScores.length
+    ? eduScores.reduce((a, b) => a + b, 0) / eduScores.length
+    : 0;
 
-  return { score: bestScore, weight: bestWeight };
-}
-
-function computeSectionScores(
-  resume: NormalizedResume,
-  linkedinProfile: LinkedInProfile
-): { sectionScores: VerificationSectionScore[]; overallScore: number } {
-  const identityNameScore = nameSimilarity(resume, linkedinProfile);
-  const identityHeadlineScore = stringSimilarity(
-    resume.targetJobTitle ?? resume.resumeName,
-    linkedinProfile.headline
-  );
-  const identityScore = clamp01(
-    0.7 * identityNameScore + 0.3 * identityHeadlineScore
+  // 3. Identity
+  const nameScore = jaccardIndex(
+    `${resume.firstName} ${resume.lastName}`,
+    `${li.firstName} ${li.lastName}`
   );
 
-  const emailMatch =
-    resume.email && linkedinProfile.email
-      ? (() => {
-          const resumeEmail = resume.email.toLowerCase();
-          const profileEmail = linkedinProfile.email.toLowerCase();
-          if (resumeEmail === profileEmail) return 1;
-          const resumeParts = emailParts(resumeEmail);
-          const profileParts = emailParts(profileEmail);
-          const domainScore =
-            resumeParts.domain && profileParts.domain
-              ? Number(resumeParts.domain === profileParts.domain)
-              : 0;
-          const localScore = stringSimilarity(
-            resumeParts.local,
-            profileParts.local
-          );
-          return clamp01(0.6 * localScore + 0.4 * domainScore);
-        })()
-      : 0;
-
-  const phoneMatch =
-    resume.phoneNumber && linkedinProfile.phone
-      ? (() => {
-          const resumePhone = normalizePhone(resume.phoneNumber);
-          const profilePhone = normalizePhone(linkedinProfile.phone);
-          if (!resumePhone || !profilePhone) return 0;
-          if (resumePhone === profilePhone) return 1;
-          if (
-            resumePhone.length >= 4 &&
-            profilePhone.length >= 4 &&
-            resumePhone.slice(-4) === profilePhone.slice(-4)
-          ) {
-            return 0.7;
-          }
-          if (
-            resumePhone.length >= 3 &&
-            profilePhone.length >= 3 &&
-            resumePhone.slice(-3) === profilePhone.slice(-3)
-          ) {
-            return 0.45;
-          }
-          return 0;
-        })()
-      : 0;
-
-  const contactSignals: Array<{ value: number; weight: number }> = [];
-  if (resume.email) contactSignals.push({ value: emailMatch, weight: 0.6 });
-  if (resume.phoneNumber)
-    contactSignals.push({ value: phoneMatch, weight: 0.4 });
-
+  // 4. Contact
   const contactScore =
-    contactSignals.length === 0
-      ? 0.35
-      : clamp01(safeWeightedAverage(contactSignals));
+    resume.email && li.email && resume.email === li.email ? 1 : 0.5;
 
-  const expMatches = resume.workExperiences.map((exp) =>
-    bestExperienceScore(exp, linkedinProfile.experiences)
-  );
-  const expCoverage =
-    expMatches.length === 0
-      ? 0
-      : expMatches.filter(({ score }) => score >= 0.55).length /
-        Math.max(1, expMatches.length);
-  const experienceScore =
-    expMatches.length === 0
-      ? 0
-      : clamp01(
-          0.7 *
-            safeWeightedAverage(
-              expMatches.map(({ score, weight }) => ({
-                value: score,
-                weight: Math.max(weight, 0.25),
-              }))
-            ) +
-            0.3 * expCoverage
-        );
-
-  const eduMatches = resume.educations.map((edu) =>
-    bestEducationScore(edu, linkedinProfile.educations)
-  );
-  const eduCoverage =
-    eduMatches.length === 0
-      ? 0
-      : eduMatches.filter(({ score }) => score >= 0.55).length /
-        Math.max(1, eduMatches.length);
-  const educationScore =
-    eduMatches.length === 0
-      ? 0
-      : clamp01(
-          0.7 *
-            safeWeightedAverage(
-              eduMatches.map(({ score, weight }) => ({
-                value: score,
-                weight: Math.max(weight, 0.3),
-              }))
-            ) +
-            0.3 * eduCoverage
-        );
-
-  const resumeSkillSet = new Set(normalizeSkills(resume.skills));
-  const linkedinSkillSet = new Set(normalizeSkills(linkedinProfile.skills));
-  const skillsOverlap = jaccardSimilarity(resumeSkillSet, linkedinSkillSet);
-  const skillIntersection = [...resumeSkillSet].filter((skill) =>
-    linkedinSkillSet.has(skill)
-  ).length;
-  const resumeSkillCoverage =
-    resumeSkillSet.size === 0
-      ? 0
-      : skillIntersection / Math.max(1, resumeSkillSet.size);
-  const skillsScore = clamp01(
-    0.65 * skillsOverlap + 0.35 * resumeSkillCoverage
-  );
-
-  const summaryAgainstAbout = stringSimilarity(
-    resume.summary ?? "",
-    linkedinProfile.about
-  );
-  const headlineAlignment = stringSimilarity(
-    resume.targetJobTitle ?? resume.resumeName,
-    linkedinProfile.headline
-  );
-  const summaryScore = clamp01(
-    0.6 * summaryAgainstAbout + 0.4 * headlineAlignment
-  );
-
-  const sectionScores: VerificationSectionScore[] = [
+  const sections: VerificationSectionScore[] = [
     {
       section: "identity",
-      score: Math.round(identityScore * 100),
+      score: Math.round(nameScore * 100),
       weight: SECTION_WEIGHTS.identity,
-      rationale:
-        "Name/headline consistency between resume and LinkedIn header.",
-      coverage: identityNameScore,
+      rationale: "Name alignment",
+      coverage: nameScore,
+    },
+    {
+      section: "experience",
+      score: Math.round(expFinal * 100),
+      weight: SECTION_WEIGHTS.experience,
+      rationale: "History alignment",
+      coverage: expFinal,
+    },
+    {
+      section: "education",
+      score: Math.round(eduFinal * 100),
+      weight: SECTION_WEIGHTS.education,
+      rationale: "Degree alignment",
+      coverage: eduFinal,
     },
     {
       section: "contact",
       score: Math.round(contactScore * 100),
       weight: SECTION_WEIGHTS.contact,
-      rationale:
-        "Email/phone consistency across resume and LinkedIn contact block.",
-      coverage: contactSignals.length > 0 ? 1 : 0,
-    },
-    {
-      section: "experience",
-      score: Math.round(experienceScore * 100),
-      weight: SECTION_WEIGHTS.experience,
-      rationale:
-        "Role/company/date alignment between resume and LinkedIn experiences.",
-      coverage: expCoverage,
-    },
-    {
-      section: "education",
-      score: Math.round(educationScore * 100),
-      weight: SECTION_WEIGHTS.education,
-      rationale:
-        "School/degree/date alignment between resume and LinkedIn education.",
-      coverage: eduCoverage,
-    },
-    {
-      section: "skills",
-      score: Math.round(skillsScore * 100),
-      weight: SECTION_WEIGHTS.skills,
-      rationale:
-        "Skill overlap between resume skills and LinkedIn skills section.",
-      coverage: skillsScore,
-    },
-    {
-      section: "summary",
-      score: Math.round(summaryScore * 100),
-      weight: SECTION_WEIGHTS.summary,
-      rationale:
-        "Consistency between resume summary and LinkedIn about/headline messaging.",
-      coverage: summaryScore,
+      rationale: "Contact check",
+      coverage: contactScore,
     },
   ];
 
-  const weightedSum = sectionScores.reduce(
-    (acc, item) => acc + item.score * item.weight,
+  const overall = sections.reduce(
+    (acc, curr) => acc + curr.score * curr.weight,
     0
   );
-  const weightTotal = Object.values(SECTION_WEIGHTS).reduce(
-    (acc, val) => acc + val,
-    0
-  );
-  const overallScore = Math.round(weightedSum / Math.max(weightTotal, 1));
 
-  return { sectionScores, overallScore };
+  return {
+    mathScores: {
+      sectionScores: sections,
+      overallScore: Math.round(overall),
+    },
+  };
+};
+
+// ---------------------------------------------------------------------------
+// 5. GRAPH CONSTRUCTION
+// ---------------------------------------------------------------------------
+
+function buildVerificationGraph() {
+  const workflow = new StateGraph(GraphState)
+    .addNode("extractor", extractNode)
+    .addNode("exp_agent", experienceVerifierNode)
+    .addNode("edu_agent", educationVerifierNode)
+    .addNode("scorer", scoringNode)
+    .addEdge(START, "extractor")
+    .addEdge("extractor", "exp_agent")
+    .addEdge("extractor", "edu_agent")
+    .addEdge("extractor", "scorer")
+    .addEdge("exp_agent", END)
+    .addEdge("edu_agent", END)
+    .addEdge("scorer", END);
+
+  return workflow.compile({ checkpointer: new MemorySaver() });
 }
 
-async function buildGraph(llmOptions?: LLMRuntimeOptions) {
-  const GraphState = Annotation.Root({
-    resume: Annotation<NormalizedResume>(),
-    linkedinText: Annotation<string>(),
-    linkedinProfile: Annotation<LinkedInProfile | null>({
-      default: () => null,
-      reducer: (a, b) => b ?? a,
-    }),
-    resumeAssertions: Annotation<string[]>({
-      default: () => [],
-      reducer: (a, b) => [...a, ...b],
-    }),
-    crossCheckFindings: Annotation<string[]>({
-      default: () => [],
-      reducer: (a, b) => [...a, ...b],
-    }),
-  });
+// ---------------------------------------------------------------------------
+// 6. MAIN EXPORT
+// ---------------------------------------------------------------------------
 
-  const extractLinkedInNode = async (state: typeof GraphState.State) => {
-    const linkedinProfile = await structuredExtract({
-      schema: LinkedInProfileSchema,
-      input: [
-        {
-          role: "system",
-          content:
-            "Extract the LinkedIn PDF exhaustively. Do not infer missing data. Use empty strings/arrays for absent values.",
-        },
-        {
-          role: "user",
-          content: `LinkedIn PDF text:\n${state.linkedinText}`,
-        },
-      ],
-      ...llmOptions,
-    });
-    return { linkedinProfile: normalizeLinkedInProfile(linkedinProfile) };
+function normalizeResumeInput(
+  resume: ResumeExtraction | NormalizedResume
+): NormalizedResume {
+  const src = resume as any;
+  return {
+    firstName: src.firstName ?? "",
+    lastName: src.lastName ?? "",
+    email: src.email ?? "",
+    phoneNumber: src.phoneNumber ?? "",
+    workExperiences: (src.workExperiences ?? []).map((exp: any) => ({
+      jobTitle: exp.jobTitle ?? "",
+      employerName: exp.employerName ?? "",
+      startedAt: normalizeDate(exp.startedAt),
+      endedAt: normalizeDate(exp.endedAt),
+      isCurrentPosition: Boolean(exp.isCurrentPosition),
+    })),
+    educations: (src.educations ?? []).map((edu: any) => ({
+      institutionName: edu.institutionName ?? "",
+      degreeTypeName: edu.degreeTypeName ?? "",
+      fieldOfStudyName: edu.fieldOfStudyName ?? "",
+      graduationAt: normalizeDate(edu.graduationAt),
+    })),
   };
-
-  const summarizeResumeNode = async (state: typeof GraphState.State) => {
-    const llm = createLLM(llmOptions);
-    const message = await llm.invoke([
-      {
-        role: "system",
-        content:
-          "Convert the resume JSON into precise factual assertions that can be cross-checked. List every field and data point explicitly.",
-      },
-      {
-        role: "user",
-        content: `Resume JSON:\n${JSON.stringify(state.resume, null, 2)}`,
-      },
-    ]);
-    const assertions = parseBulletList(toText(message.content));
-    return { resumeAssertions: assertions };
-  };
-
-  const crossCheckNode = async (state: typeof GraphState.State) => {
-    const llm = createLLM({ ...llmOptions, temperature: 0 });
-    const message = await llm.invoke([
-      {
-        role: "system",
-        content:
-          "Compare resume assertions against LinkedIn data. Return concise discrepancies or confirmations covering identity, contact, experience, education, skills, and summary.",
-      },
-      {
-        role: "user",
-        content: `Resume assertions:\n${state.resumeAssertions
-          .map((a, idx) => `${idx + 1}. ${a}`)
-          .join(
-            "\n"
-          )}\n\nLinkedIn profile:\n${JSON.stringify(state.linkedinProfile, null, 2)}`,
-      },
-    ]);
-    const findings = parseBulletList(toText(message.content));
-    return { crossCheckFindings: findings };
-  };
-
-  const workflow = new StateGraph(GraphState)
-    .addNode("extractLinkedIn", extractLinkedInNode)
-    .addNode("summarizeResume", summarizeResumeNode)
-    .addNode("crossCheck", crossCheckNode)
-    .addEdge(START, "extractLinkedIn")
-    .addEdge("extractLinkedIn", "summarizeResume")
-    .addEdge("summarizeResume", "crossCheck")
-    .addEdge("crossCheck", END)
-    .compile({
-      checkpointer: new MemorySaver(),
-    });
-
-  return workflow;
 }
 
 export async function runResumeLinkedInVerification(params: {
   resume: ResumeExtraction | NormalizedResume;
   linkedinPdfText: string;
   llmOptions?: LLMRuntimeOptions;
-}): Promise<VerificationAgentResult> {
+}): Promise<VerificationResult> {
+  const graph = buildVerificationGraph();
   const normalizedResume = normalizeResumeInput(params.resume);
-  const graph = await buildGraph(params.llmOptions);
-  const state = await graph.invoke(
+
+  const result = await graph.invoke(
     {
       resume: normalizedResume,
       linkedinText: params.linkedinPdfText,
-      linkedinProfile: null,
-      resumeAssertions: [],
-      crossCheckFindings: [],
     },
     {
       configurable: {
         thread_id: randomUUID(),
+        llmOptions: params.llmOptions,
       },
     }
   );
 
-  if (!state.linkedinProfile) {
-    throw new Error("LinkedIn profile extraction failed");
-  }
+  // Combine the reports into one beautiful Markdown string
+  const fullReport = `
+# Verification Report 📋
+**Overall Match Score:** ${result.mathScores.overallScore}/100
 
-  const normalizedLinkedIn = normalizeLinkedInProfile(state.linkedinProfile);
-  const { sectionScores, overallScore } = computeSectionScores(
-    normalizedResume,
-    normalizedLinkedIn
-  );
+<br>
+
+${result.experienceReport}
+
+<br>
+
+${result.educationReport}
+  `;
 
   return {
-    linkedinProfile: normalizedLinkedIn,
-    resumeAssertions: state.resumeAssertions,
-    findings: state.crossCheckFindings,
-    sectionScores,
-    overallScore,
-    scoringMethod: DEFAULT_SCORING_METHOD,
+    linkedinProfile: result.linkedinProfile,
+    findings: fullReport.trim(),
+    sectionScores: result.mathScores.sectionScores,
+    overallScore: result.mathScores.overallScore,
+    scoringMethod: "parallel_formatted_report_v6",
   };
 }

@@ -2,7 +2,7 @@
 
 import React from "react";
 import ResumeCard from "../resumes/resume-card";
-import { ResumeDTO } from "@visume/types";
+import { ResumeDTO, ResumeListResponse } from "@visume/types";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/hooks/use-api-client";
 import { IconPlus } from "@tabler/icons-react";
@@ -16,10 +16,10 @@ export default function VerifyResumeList({
 }) {
   const api = useApiClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<ResumeListResponse>({
     queryKey: ["resumes-list"],
     queryFn: async () => {
-      const res = await api.get(`/resumes`);
+      const res = await api.get<ResumeListResponse>(`/resumes`);
       return res.data;
     },
   });

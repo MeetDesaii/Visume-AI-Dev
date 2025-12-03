@@ -55,7 +55,7 @@ const ResumeReviewSchema = new Schema(
     collection: "resume_reviews",
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 // ============================================
@@ -79,7 +79,7 @@ ResumeReviewSchema.virtual("durationSeconds").get(function (this: any) {
 // RESUME REVIEW STATIC METHODS
 // =============================================
 ResumeReviewSchema.statics.findByResume = function (
-  resumeId: Types.ObjectId
+  resumeId: Types.ObjectId,
 ): Promise<[]> {
   return this.find({ resume: resumeId })
     .sort({ createdAt: -1 })
@@ -87,7 +87,7 @@ ResumeReviewSchema.statics.findByResume = function (
 };
 
 ResumeReviewSchema.statics.findByOwner = function (
-  ownerId: Types.ObjectId
+  ownerId: Types.ObjectId,
 ): Promise<[]> {
   return this.find({ owner: ownerId })
     .sort({ createdAt: -1 })
@@ -95,7 +95,7 @@ ResumeReviewSchema.statics.findByOwner = function (
 };
 
 ResumeReviewSchema.statics.findCompletedReviews = function (
-  resumeId: Types.ObjectId
+  resumeId: Types.ObjectId,
 ): Promise<[]> {
   return this.find({
     resume: resumeId,

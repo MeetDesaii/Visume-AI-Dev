@@ -118,7 +118,7 @@ function AnimatedGroup({
   const MotionComponent = React.useMemo(() => motion.create(as as any), [as]);
   const MotionChild = React.useMemo(
     () => motion.create(asChild as any),
-    [asChild]
+    [asChild],
   );
 
   return (

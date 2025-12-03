@@ -1,25 +1,6 @@
 import { User } from "@visume/database";
+import { AuthProvider, ClerkUserData } from "@visume/types";
 import { logger } from "../utils/logger";
-
-interface ClerkUserData {
-  id: string;
-  email_addresses?: Array<{
-    email_address: string;
-    id: string;
-    verification?: {
-      status: string;
-    };
-  }>;
-  first_name?: string;
-  last_name?: string;
-  image_url?: string;
-  external_accounts?: Array<{
-    provider: string;
-    email_address: string;
-  }>;
-  created_at?: number;
-  updated_at?: number;
-}
 
 export async function createUser(clerkData: ClerkUserData): Promise<void> {
   try {
@@ -37,12 +18,7 @@ export async function createUser(clerkData: ClerkUserData): Promise<void> {
 
     // Determine auth providers
     const authProviders: Array<{
-      provider:
-        | "email"
-        | "google"
-        | "linkedin"
-        | "oauth_google"
-        | "oauth_linkedin";
+      provider: AuthProvider;
       email?: string;
     }> = [];
 
@@ -97,7 +73,7 @@ export async function createUser(clerkData: ClerkUserData): Promise<void> {
     });
 
     logger.info(
-      `[UserSyncService] ✅ User created successfully in MongoDB: ${user.clerkId} (${user.email})`
+      `[UserSyncService] ✅ User created successfully in MongoDB: ${user.clerkId} (${user.email})`,
     );
   } catch (error) {
     logger.error(error, "[UserSyncService] ❌ Error creating user:");
@@ -131,12 +107,7 @@ export async function updateUser(clerkData: ClerkUserData): Promise<void> {
     // Update auth providers if external accounts changed
     if (clerkData.external_accounts && clerkData.external_accounts.length > 0) {
       const authProviders: Array<{
-        provider:
-          | "email"
-          | "google"
-          | "linkedin"
-          | "oauth_google"
-          | "oauth_linkedin";
+        provider: AuthProvider;
         email?: string;
       }> = [];
 
@@ -162,7 +133,7 @@ export async function updateUser(clerkData: ClerkUserData): Promise<void> {
     const user = await User.findOneAndUpdate(
       { clerkId: clerkData.id },
       { $set: updateData },
-      { new: true }
+      { new: true },
     );
 
     if (user) {

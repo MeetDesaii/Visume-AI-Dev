@@ -1,14 +1,16 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { Webhook } from "svix";
 import { UserJSON, WebhookEvent } from "@clerk/express";
 import { User } from "@visume/database";
+import { VerifySessionResponse, WebhookAckResponse } from "@visume/types";
 import { logger } from "../utils/logger";
 import * as emailService from "../services/email.service";
+import { AppError } from "../middleware/error.middleware";
 
 // Handle Clerk webhook events
 export async function handleWebhook(
   req: Request,
-  res: Response
+  res: Response<WebhookAckResponse>,
 ): Promise<void> {
   try {
     const webhook = new Webhook(process.env.CLERK_WEBHOOK_SECRET!);
@@ -20,7 +22,7 @@ export async function handleWebhook(
 
     const event = webhook.verify(
       JSON.stringify(req.body),
-      headers
+      headers,
     ) as WebhookEvent;
 
     switch (event.type) {
@@ -38,10 +40,16 @@ export async function handleWebhook(
         break;
     }
 
-    res.status(200).json({ received: true });
+    res.status(200).json({
+      success: true,
+      data: { received: true },
+    });
   } catch (error) {
     logger.error(error, "Webhook error:");
-    res.status(400).json({ error: "Webhook processing failed" });
+    res.status(400).json({
+      success: false,
+      error: "Webhook processing failed",
+    });
   }
 }
 
@@ -92,7 +100,7 @@ async function handleUserUpdated(data: any): Promise<void> {
         firstName: data.first_name,
         lastName: data.last_name,
         imageUrl: data.image_url,
-      }
+      },
     );
   } catch (error) {
     logger.error(error, "User update error:");
@@ -114,7 +122,7 @@ async function handleSessionCreated(data: any): Promise<void> {
       { clerkId: data.user_id },
       {
         "stats.lastActive": new Date(),
-      }
+      },
     );
   } catch (error) {
     logger.error(error, "Session update error:");
@@ -124,29 +132,32 @@ async function handleSessionCreated(data: any): Promise<void> {
 // Verify session
 export async function verifySession(
   req: Request,
-  res: Response
+  res: Response<VerifySessionResponse>,
+  next: NextFunction,
 ): Promise<void> {
   try {
     const userId = req.auth.userId;
     const user = await User.findOne({ clerkId: userId });
 
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+    if (!user) return next(new AppError(404, "User not found"));
 
     res.json({
       success: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        subscription: user.subscription,
+      data: {
+        user: {
+          _id: user._id as string,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          subscription: user.subscription,
+        },
       },
     });
   } catch (error) {
     logger.error(error, "Session verification error:");
-    res.status(500).json({ error: "Session verification failed" });
+    res.status(500).json({
+      success: false,
+      error: "Session verification failed",
+    });
   }
 }

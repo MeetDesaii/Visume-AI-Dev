@@ -2,30 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
-
-/**
- * Supported file formats for text extraction
- */
-export enum FileFormat {
-  PDF = "pdf",
-  DOCX = "docx",
-  DOC = "doc",
-  TXT = "txt",
-}
-
-/**
- * Result interface for text extraction
- */
-export interface ExtractionResult {
-  success: boolean;
-  text: string;
-  format: FileFormat;
-  error?: string;
-  metadata?: {
-    pageCount?: number;
-    wordCount?: number;
-  };
-}
+import { ExtractionResult, FileFormat } from "@visume/types";
 
 /**
  * Extract text from PDF files
@@ -57,7 +34,7 @@ async function extractFromDOCX(buffer: Buffer): Promise<string> {
 async function extractFromDOC(buffer: Buffer): Promise<string> {
   throw new Error(
     "Legacy DOC format requires additional tools. " +
-      "Please convert to DOCX or use system tools like LibreOffice/Antiword."
+      "Please convert to DOCX or use system tools like LibreOffice/Antiword.",
   );
 }
 
@@ -96,7 +73,7 @@ function detectFormat(filePath: string): FileFormat {
  */
 export async function extractTextFromBuffer(
   filePath: string,
-  fileBuffer?: Buffer
+  fileBuffer?: Buffer,
 ): Promise<ExtractionResult> {
   try {
     // Read file if buffer not provided

@@ -1,5 +1,6 @@
 import ResumeDetailsPage from "@/components/dashboard/resumes/details/resume-details-page";
 import { getServerApiClient } from "@/lib/axios/server";
+import { ResumeDetailResponse } from "@visume/types";
 
 type Props = {
   params: Promise<{
@@ -11,8 +12,7 @@ export default async function ResumeDetails({ params }: Props) {
   const { id } = await params;
   const api = getServerApiClient();
 
-  const res = await api.get(`/resumes/${id}`);
-  const resume = res.data?.data?.resume;
+  const res = await api.get<ResumeDetailResponse>(`/resumes/${id}`);
 
   return (
     <div>

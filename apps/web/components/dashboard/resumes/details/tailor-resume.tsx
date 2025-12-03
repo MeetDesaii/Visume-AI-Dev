@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@visume/ui/components/dialog";
 import { ResumeReview } from "@visume/types/models/resume-review";
-import { ResumeWithOutJob } from "@visume/types";
+import { ResumeTailorResponse, ResumeWithOutJob } from "@visume/types";
 import { Label } from "@visume/ui/components/label";
 import { useMutation } from "@tanstack/react-query";
 import { useApiClient } from "@/hooks/use-api-client";
@@ -31,9 +31,13 @@ export default function TailorResume({
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const api = useApiClient();
-  const { isPending, data, mutate } = useMutation({
+  const { isPending, mutate } = useMutation<
+    ResumeTailorResponse,
+    unknown,
+    string
+  >({
     mutationFn: async (id: string) => {
-      const res = await api.post(`/resumes/${id}/tailor`);
+      const res = await api.post<ResumeTailorResponse>(`/resumes/${id}/tailor`);
       return res.data;
     },
     onSuccess() {

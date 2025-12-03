@@ -1,22 +1,8 @@
 /* =======================
- * Public API Response DTOs
+ * Resume DTOs
  * ======================= */
 
 import { Job } from "./job";
-import { ResumeReview } from "./resume-review";
-
-/** Wrapper your route returns */
-export interface CreateOrUpsertResumeResponse {
-  ok: true;
-  resume: ResumeDTO;
-}
-
-/** Error shape (if you standardize it) */
-export interface ApiErrorResponse {
-  ok: false;
-  error: string;
-  details?: unknown;
-}
 
 /** Root resume JSON returned to clients */
 export interface ResumeDTO {
@@ -65,19 +51,6 @@ export interface ResumeDTO {
 
 export interface ResumeWithOutJob extends Omit<ResumeDTO, "job"> {
   job: Job;
-}
-
-export interface ResumeDetailsResponse {
-  success: boolean;
-  data: {
-    resume: ResumeWithOutJob;
-  };
-}
-export interface ResumeReviewResponse {
-  success: boolean;
-  data: {
-    review: ResumeReview;
-  };
 }
 
 /* ---------- Simple subdocuments ---------- */

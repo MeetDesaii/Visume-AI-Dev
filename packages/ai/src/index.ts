@@ -29,6 +29,6 @@ export {
   tailorResumeContent,
   runResumeLinkedInVerification,
   type NormalizedResume,
-  type VerificationAgentResult,
+  type VerificationResult,
   type VerificationSectionScore,
 } from "./services";

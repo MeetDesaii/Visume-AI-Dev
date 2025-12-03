@@ -24,6 +24,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
+    "@visume/types": "workspace:*",
     "@visume/typescript-config": "workspace:*",
     "mammoth": "^1.11.0",
     "pdf-parse": "^2.3.11"

@@ -197,3 +197,39 @@
   width: 100% !important;
   height: 100% !important;
 }
+
+
+/* Apply to the container rendering the markdown */
+.markdown-content table {
+  @apply w-full text-left border-collapse my-6 overflow-hidden rounded-lg shadow;
+}
+
+.markdown-content th {
+  @apply bg-gray-100 text-gray-700 font-bold p-3 border-b border-gray-200 text-sm;
+}
+
+.markdown-content h1 {
+  @apply text-2xl font-semibold my-3;
+}
+.markdown-content li {
+  @apply my-5;
+}
+.markdown-content h2 {
+  @apply text-xl font-medium my-2;
+}
+.markdown-content h3 {
+  @apply text-lg font-medium my-5;
+}
+
+.markdown-content td {
+  @apply p-3 border-b border-gray-100 text-sm align-top;
+}
+
+.markdown-content tr:hover {
+  @apply bg-gray-50;
+}
+
+/* Style the Blockquotes for the Analysis section */
+.markdown-content blockquote {
+  @apply border-l-4 border-blue-500 bg-blue-50 p-4 my-4 rounded-r text-gray-700 italic;
+}

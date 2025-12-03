@@ -13,7 +13,7 @@ import Link from "next/link";
 import { File, Plus } from "lucide-react";
 import ResumeCard from "@/components/dashboard/resumes/resume-card";
 
-import { ResumeDTO } from "@visume/types";
+import { ResumeDTO, ResumeListResponse } from "@visume/types";
 import { useRouter } from "next/navigation";
 import { useApiClient } from "@/hooks/use-api-client";
 import { useQuery } from "@tanstack/react-query";
@@ -23,10 +23,10 @@ export default function ResumesPage() {
   const api = useApiClient();
   const router = useRouter();
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error } = useQuery<ResumeListResponse>({
     queryKey: ["resumes-list"],
     queryFn: async () => {
-      const res = await api.get(`/resumes`);
+      const res = await api.get<ResumeListResponse>(`/resumes`);
       return res.data;
     },
   });

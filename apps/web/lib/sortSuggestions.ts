@@ -62,14 +62,14 @@ function normalizeToSectionId(raw?: string): string | null {
 
 const sectionIndex: Record<string, number> = sections.reduce(
   (acc, s, i) => ((acc[s.id] = i), acc),
-  {} as Record<string, number>
+  {} as Record<string, number>,
 );
 
 const priorityRank: Record<string, number> = { CRITICAL: 0, RECOMMENDED: 1 };
 
 export function sortSuggestions(
   suggestions: Suggestions[],
-  opts?: { sortItems?: boolean; includeEmpty?: boolean }
+  opts?: { sortItems?: boolean; includeEmpty?: boolean },
 ) {
   const { sortItems = true, includeEmpty = false } = opts ?? {};
 

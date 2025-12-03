@@ -70,25 +70,12 @@ export interface ResumeVerificationDTO extends Timestamps {
   resume: ObjectId | ResumeDTO;
   linkedinProfile: ObjectId | LinkedInProfileDTO;
   status: "PENDING" | "COMPLETED" | "FAILED";
-  findings: string[];
+  findings: string;
   resumeAssertions: string[];
   sectionScores: VerificationSectionScoreDTO[];
   overallScore: number;
   scoringMethod?: string;
   runMetadata?: Record<string, unknown>;
-}
-
-export interface ResumeVerificationResponse {
-  success: boolean;
-  data: {
-    verification: ResumeVerificationDTO;
-    linkedinProfile: LinkedInProfileDTO;
-  };
-}
-
-export interface ResumeVerificationsResponse {
-  success: boolean;
-  data: ResumeVerificationDTO;
 }
 
 export type ResumeSummaryDTO = Pick<
@@ -100,13 +87,3 @@ export type LinkedInProfileSummaryDTO = Pick<
   LinkedInProfileDTO,
   "_id" | "firstName" | "lastName" | "headline" | "sourceFileName"
 >;
-
-export interface VerifiedResumesResponse {
-  success: boolean;
-  data: Array<
-    Omit<ResumeVerificationDTO, "resume" | "linkedinProfile"> & {
-      resume: ResumeSummaryDTO | ObjectId;
-      linkedinProfile: LinkedInProfileSummaryDTO | ObjectId;
-    }
-  >;
-}

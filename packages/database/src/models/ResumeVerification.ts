@@ -29,10 +29,8 @@ const resumeVerificationSchema = new Schema(
       index: true,
     },
     findings: {
-      type: [String],
-      default: [],
-      set: (vals: string[]) =>
-        (vals || []).map((v) => v.trim()).filter(Boolean),
+      type: String,
+      default: "",
     },
     resumeAssertions: {
       type: [String],

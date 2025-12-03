@@ -3,7 +3,7 @@ import { convertStringToDate } from "../utils";
 import mongoose from "mongoose";
 
 export function transformAIResponseForDB(
-  aiResponse: ResumeExtraction
+  aiResponse: ResumeExtraction,
 ): ResumeExtraction {
   return {
     ...aiResponse,
@@ -34,7 +34,7 @@ export function isValidMongoId(id: string) {
 }
 
 export function transformLinkedInProfileForDB(
-  profile: LinkedInProfile
+  profile: LinkedInProfile,
 ): LinkedInProfile {
   return {
     ...profile,

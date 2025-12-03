@@ -64,7 +64,7 @@ function extractTextFromTXT(buffer: Buffer): string {
  */
 export async function extractTextFromResume(
   buffer: Buffer,
-  mimetype: string
+  mimetype: string,
 ): Promise<string> {
   logger.info(`Extracting text from file type: ${mimetype}`);
 
@@ -149,7 +149,7 @@ export function validateExtractedText(text: string): {
   // Warning for very short resumes
   if (text.length < 500) {
     warnings.push(
-      "Resume appears to be very short. Consider adding more details."
+      "Resume appears to be very short. Consider adding more details.",
     );
   }
 
@@ -162,7 +162,7 @@ export function validateExtractedText(text: string): {
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
   if (!emailRegex.test(text)) {
     warnings.push(
-      "No email address found in resume. Ensure contact information is included."
+      "No email address found in resume. Ensure contact information is included.",
     );
   }
 

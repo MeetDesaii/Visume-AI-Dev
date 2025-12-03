@@ -21,7 +21,7 @@ router.post(
   uploadLinkedInProfile,
   handleUploadError,
   validateFileUploaded,
-  verifyResumeWithLinkedIn
+  verifyResumeWithLinkedIn,
 );
 
 router.get("/resumes", getAllVerifiedResumes);

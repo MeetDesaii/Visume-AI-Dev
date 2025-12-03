@@ -71,7 +71,7 @@ export default function ResumeCard({
       <Card
         className={cn(
           "bg-primary/10 p-5 rounded-2xl min-h-40 flex border-0 flex-col justify-between cursor-pointer hover:bg-primary/20 transition-all",
-          selected && "ring-2 ring-primary shadow-lg bg-primary/20"
+          selected && "ring-2 ring-primary shadow-lg bg-primary/20",
         )}
       >
         <CardHeader className="overflow-hidden p-0">

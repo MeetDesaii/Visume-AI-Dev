@@ -46,7 +46,6 @@ export default function InitialSetupPage() {
         <h3 className="text-xl font-bold text-primary ">Visume AI</h3>
       </nav>
       <div className="max-w-xl grid place-content-center   min-h-[calc(100vh_-_200px)] space-y-10 container mx-auto">
-
         <div>
           {progress.form === "JOB_FORM" && (
             <JobForm

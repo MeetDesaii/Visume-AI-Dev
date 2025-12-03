@@ -62,7 +62,7 @@ const logger = pino(
         sync: false,
       }),
     },
-  ])
+  ]),
 );
 
 export { logger };

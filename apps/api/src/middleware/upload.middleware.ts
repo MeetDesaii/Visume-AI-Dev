@@ -5,6 +5,7 @@
 
 import multer from "multer";
 import { Request } from "express";
+import { UploadedFile } from "@visume/types";
 import { logger } from "../utils/logger";
 
 // File type validation
@@ -33,13 +34,13 @@ const storage = multer.memoryStorage();
 const fileFilter = (
   _req: Request,
   file: Express.Multer.File,
-  callback: multer.FileFilterCallback
+  callback: multer.FileFilterCallback,
 ) => {
   // Check MIME type
   if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     logger.warn(`Rejected file upload - invalid MIME type: ${file.mimetype}`);
     return callback(
-      new Error(`Invalid file type. Allowed types: PDF, DOCX, DOC, TXT`)
+      new Error(`Invalid file type. Allowed types: PDF, DOCX, DOC, TXT`),
     );
   }
 
@@ -49,8 +50,8 @@ const fileFilter = (
     logger.warn(`Rejected file upload - invalid extension: ${extension}`);
     return callback(
       new Error(
-        `Invalid file extension. Allowed extensions: ${ALLOWED_EXTENSIONS.join(", ")}`
-      )
+        `Invalid file extension. Allowed extensions: ${ALLOWED_EXTENSIONS.join(", ")}`,
+      ),
     );
   }
 
@@ -73,7 +74,8 @@ const createSingleFileUpload = (fieldName: string) =>
   }).single(fieldName);
 
 export const uploadResume: any = createSingleFileUpload("resume");
-export const uploadLinkedInProfile: any = createSingleFileUpload("linkedinProfile");
+export const uploadLinkedInProfile: any =
+  createSingleFileUpload("linkedinProfile");
 
 /**
  * Upload error handler middleware
@@ -83,7 +85,7 @@ export function handleUploadError(
   err: any,
   _req: Request,
   res: any,
-  next: any
+  next: any,
 ) {
   console.log("HELLLOOOO");
   if (err instanceof multer.MulterError) {
@@ -138,16 +140,6 @@ export function validateFileUploaded(req: Request, res: any, next: any) {
     });
   }
   next();
-}
-
-/**
- * File metadata interface
- */
-export interface UploadedFile {
-  buffer: Buffer;
-  originalname: string;
-  mimetype: string;
-  size: number;
 }
 
 /**

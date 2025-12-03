@@ -8,7 +8,7 @@ function loadEnvironment() {
   // Skip .env loading in production environments (Railway, Render, etc.)
   if (nodeEnv === "production") {
     console.log(
-      "✓ Running in production mode - using platform environment variables"
+      "✓ Running in production mode - using platform environment variables",
     );
     return;
   }
@@ -24,7 +24,7 @@ function loadEnvironment() {
       // Check if error is due to missing file
       if (result.error.message.includes("ENOENT")) {
         console.log(
-          ` No ${envFile} file found - using system environment variables`
+          ` No ${envFile} file found - using system environment variables`,
         );
       } else {
         console.warn(`⚠️  Warning loading ${envFile}:`, result.error.message);
@@ -47,6 +47,7 @@ function validateEnvironment() {
     "CLERK_SECRET_KEY",
     "CLERK_WEBHOOK_SECRET",
     "OPENAI_API_KEY",
+    "FIRECRAWL_API_KEY",
   ];
 
   const missing = required.filter((key) => !process.env[key]);
@@ -54,11 +55,11 @@ function validateEnvironment() {
   if (missing.length > 0) {
     console.error(
       `❌ Missing required environment variables:\n` +
-        missing.map((key) => `   - ${key}`).join("\n")
+        missing.map((key) => `   - ${key}`).join("\n"),
     );
     console.error(
-      `\nFor local development: Create a .env file with these variables` +
-        `\nFor production (Railway/Render): Set these in your platform dashboard`
+      `\nFor local development: Create a .env.development file with these variables` +
+        `\nFor production (Railway/Render): Set these in your platform dashboard`,
     );
     throw new Error("Missing required environment variables");
   }

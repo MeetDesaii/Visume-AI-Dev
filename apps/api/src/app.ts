@@ -30,7 +30,7 @@ function initializeMiddlewares(app: Application): void {
           imgSrc: ["'self'", "data:", "https:"],
         },
       },
-    })
+    }),
   );
 
   // CORS configuration
@@ -57,7 +57,7 @@ function initializeMiddlewares(app: Application): void {
         "x-clerk-session",
         "X-Requested-With",
       ],
-    })
+    }),
   );
 
   // Compression
@@ -73,7 +73,7 @@ function initializeMiddlewares(app: Application): void {
       stream: {
         write: (message) => logger.info(message.trim()),
       },
-    })
+    }),
   );
 
   // Global rate limiting
