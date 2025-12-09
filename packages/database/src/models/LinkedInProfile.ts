@@ -11,15 +11,17 @@ const linkedinExperienceSchema = new Schema(
     achievements: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
     skills: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const linkedinEducationSchema = new Schema(
@@ -30,7 +32,7 @@ const linkedinEducationSchema = new Schema(
     graduationAt: { type: Date },
     description: { type: String, trim: true, default: "", maxlength: 2000 },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const linkedinCertificationSchema = new Schema(
@@ -41,7 +43,7 @@ const linkedinCertificationSchema = new Schema(
     expiryDate: { type: Date },
     credentialUrl: { type: String, trim: true, default: "", maxlength: 500 },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const linkedinProfileSchema = new Schema(
@@ -54,12 +56,19 @@ const linkedinProfileSchema = new Schema(
     headline: { type: String, trim: true, default: "", maxlength: 300 },
     about: { type: String, trim: true, default: "", maxlength: 10000 },
     location: { type: String, trim: true, default: "", maxlength: 150 },
-    email: { type: String, trim: true, lowercase: true, default: "", maxlength: 200 },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+      maxlength: 200,
+    },
     phone: { type: String, trim: true, default: "", maxlength: 30 },
     websites: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
 
     experiences: { type: [linkedinExperienceSchema], default: [] },
@@ -68,17 +77,20 @@ const linkedinProfileSchema = new Schema(
     skills: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
     languages: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
     accomplishments: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
 
     rawText: { type: String, default: "" },
@@ -91,7 +103,7 @@ const linkedinProfileSchema = new Schema(
     versionKey: false,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 linkedinProfileSchema.index({ resume: 1, owner: 1 }, { unique: false });

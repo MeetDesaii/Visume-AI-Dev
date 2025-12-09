@@ -23,7 +23,7 @@ router.post(
   uploadLinkedInProfile,
   handleUploadError,
   validateFileUploaded,
-  verifyResumeWithLinkedIn
+  verifyResumeWithLinkedIn,
 );
 
 router.post("/github", verifyResumeWithGithub);

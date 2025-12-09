@@ -3,10 +3,13 @@ import ResumeCard from "@/components/dashboard/resumes/resume-card";
 import ResumeVerificationCard from "@/components/dashboard/verification/resume-verification-card";
 import { useApiClient } from "@/hooks/use-api-client";
 import { useUser } from "@clerk/nextjs";
-import { currentUser } from "@clerk/nextjs/server";
 import { IconPlus } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { ResumeDTO } from "@visume/types";
+import {
+  ResumeDTO,
+  ResumeListResponse,
+  VerifiedResumesResponse,
+} from "@visume/types";
 import {
   Avatar,
   AvatarFallback,
@@ -22,18 +25,18 @@ export default function DashboardPage() {
   const { user } = useUser();
   const router = useRouter();
 
-  const resumesQuery = useQuery({
+  const resumesQuery = useQuery<ResumeListResponse>({
     queryKey: ["resumes-list"],
     queryFn: async () => {
-      const res = await api.get(`/resumes`);
+      const res = await api.get<ResumeListResponse>(`/resumes`);
       return res.data;
     },
   });
 
-  const verifiedResumesQuery = useQuery({
+  const verifiedResumesQuery = useQuery<VerifiedResumesResponse>({
     queryKey: ["verified-resumes-list"],
     queryFn: async () => {
-      const res = await api.get("/verify/resumes");
+      const res = await api.get<VerifiedResumesResponse>("/verify/resumes");
       return res.data;
     },
   });

@@ -42,7 +42,7 @@ export function createAxiosClient({
         await onUnauthorized(error);
       }
       return Promise.reject(error);
-    }
+    },
   );
 
   return instance;

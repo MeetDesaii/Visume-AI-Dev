@@ -14,7 +14,7 @@ export const optionalAuth: RequestHandler = clerkOptionalAuth;
 export const attachUser = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     if (req.auth.userId) {

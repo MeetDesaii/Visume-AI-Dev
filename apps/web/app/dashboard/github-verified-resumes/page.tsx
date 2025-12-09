@@ -4,7 +4,6 @@ import VerifyResumeList from "@/components/dashboard/verification/verify-resume-
 import { useApiClient } from "@/hooks/use-api-client";
 import {
   GithubProjectVerificationDTO,
-  GithubVerificationDTO,
   GithubVerificationResponse,
   ResumeDTO,
 } from "@visume/types";
@@ -38,7 +37,7 @@ export default function GithubVerifiedResumesPage() {
   const [selectedResume, setSelectedResume] = useState<ResumeDTO | null>(null);
   const [githubUrl, setGithubUrl] = useState("");
 
-  const verificationQuery = useQuery({
+  const verificationQuery = useQuery<GithubVerificationResponse>({
     queryKey: ["github-verification", selectedResume?._id],
     enabled: Boolean(selectedResume?._id),
     queryFn: async (): Promise<GithubVerificationResponse> => {
@@ -52,15 +51,15 @@ export default function GithubVerifiedResumesPage() {
     staleTime: 1000 * 30,
   });
 
-  const runVerification = useMutation({
+  const runVerification = useMutation<GithubVerificationResponse>({
     mutationFn: async () => {
       const resumeId = selectedResume?._id;
       if (!resumeId) throw new Error("Select a resume before verifying");
-      const res = await api.post("/verify/github", {
+      const res = await api.post<GithubVerificationResponse>("/verify/github", {
         resumeId,
         githubProfileUrl: githubUrl,
       });
-      return res.data as GithubVerificationResponse;
+      return res.data;
     },
     onSuccess: () => {
       toast.success("GitHub verification started/completed");
@@ -84,21 +83,20 @@ export default function GithubVerifiedResumesPage() {
     const resumeGithub =
       selectedResume.profiles?.github ||
       selectedResume.links?.find((l) =>
-        typeof l === "string" ? l.toLowerCase().includes("github.com") : false
+        typeof l === "string" ? l.toLowerCase().includes("github.com") : false,
       ) ||
       "";
     setGithubUrl(resumeGithub);
   }, [selectedResume]);
 
   const verification = useMemo(
-    () => verificationQuery.data?.data as GithubVerificationDTO | undefined,
-    [verificationQuery.data]
+    () => verificationQuery.data?.data,
+    [verificationQuery.data],
   );
 
   const projectResults = useMemo(
-    () =>
-      (verification?.projectResults as GithubProjectVerificationDTO[]) ?? [],
-    [verification?.projectResults]
+    () => verification?.projectResults ?? [],
+    [verification?.projectResults],
   );
 
   const overallScore = verification?.overallScore ?? 0;

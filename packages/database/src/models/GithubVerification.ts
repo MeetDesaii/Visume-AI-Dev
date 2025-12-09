@@ -16,21 +16,24 @@ const projectResultSchema = new Schema(
     supportedClaims: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
     missingClaims: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
     riskFlags: {
       type: [String],
       default: [],
-      set: (vals: string[]) => (vals || []).map((v) => v.trim()).filter(Boolean),
+      set: (vals: string[]) =>
+        (vals || []).map((v) => v.trim()).filter(Boolean),
     },
     alignmentScore: { type: Number, min: 0, max: 100, default: 0 },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const githubVerificationSchema = new Schema(
@@ -42,7 +45,12 @@ const githubVerificationSchema = new Schema(
       required: true,
       index: true,
     },
-    githubProfileUrl: { type: String, trim: true, required: true, maxlength: 300 },
+    githubProfileUrl: {
+      type: String,
+      trim: true,
+      required: true,
+      maxlength: 300,
+    },
     profileMarkdown: { type: String, default: "" },
 
     projectResults: { type: [projectResultSchema], default: [] },
@@ -65,12 +73,12 @@ const githubVerificationSchema = new Schema(
     versionKey: false,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 githubVerificationSchema.index(
   { resume: 1, githubProfileUrl: 1 },
-  { unique: false }
+  { unique: false },
 );
 
 export type GithubVerificationDoc = InferSchemaType<
@@ -82,5 +90,5 @@ export const GithubVerification: GithubVerificationModel =
   mongoose.models.GithubVerification ||
   mongoose.model<GithubVerificationDoc>(
     "GithubVerification",
-    githubVerificationSchema
+    githubVerificationSchema,
   );

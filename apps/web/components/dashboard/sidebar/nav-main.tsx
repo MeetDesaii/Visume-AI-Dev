@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import {
   Collapsible,
@@ -27,7 +27,9 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon?:  React.ForwardRefExoticComponent<IconProps & React.RefAttributes<Icon>>;
+    icon?: React.ForwardRefExoticComponent<
+      IconProps & React.RefAttributes<Icon>
+    >;
     isActive?: boolean;
     items?: {
       title: string;
@@ -35,8 +37,7 @@ export function NavMain({
     }[];
   }[];
 }) {
-
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <SidebarGroup>
@@ -51,14 +52,18 @@ export function NavMain({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-             <Link href={item.url}>
-                <SidebarMenuButton tooltip={item.title}  isActive={pathname === item.url} >
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                  {item.items && item.items?.length > 0 && (
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  )}
-                </SidebarMenuButton></Link>
+                <Link href={item.url}>
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={pathname === item.url}
+                  >
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                    {item.items && item.items?.length > 0 && (
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    )}
+                  </SidebarMenuButton>
+                </Link>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>

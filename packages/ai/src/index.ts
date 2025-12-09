@@ -29,7 +29,7 @@ export {
   tailorResumeContent,
   runResumeLinkedInVerification,
   type NormalizedResume,
-  type VerificationAgentResult,
+  type VerificationResult,
   type VerificationSectionScore,
   runResumeGithubVerification,
   type GithubVerificationAgentResult,

@@ -32,8 +32,3 @@ export interface GithubVerificationDTO extends Timestamps {
   overallScore: number;
   runMetadata?: Record<string, unknown>;
 }
-
-export interface GithubVerificationResponse {
-  success: boolean;
-  data: GithubVerificationDTO;
-}

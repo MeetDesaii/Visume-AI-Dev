@@ -10,13 +10,13 @@ export default function Header() {
 
       <div className="flex gap-4">
         <Link href="/sign-in">
-          <Button variant="secondary">
+          <Button size="lg" variant="secondary">
             <LogIn />
             Login
           </Button>
         </Link>
         <Link href="/sign-up">
-          <Button>
+          <Button size="lg">
             Get Started
             <ArrowRight />
           </Button>

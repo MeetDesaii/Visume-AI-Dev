@@ -114,7 +114,10 @@ function truncate(text: string, max = 12000): string {
   return text.length > max ? `${text.slice(0, max)}...` : text;
 }
 
-function normalizeGithubProfileUrl(raw: string): { profileUrl: string; username: string } {
+function normalizeGithubProfileUrl(raw: string): {
+  profileUrl: string;
+  username: string;
+} {
   const trimmed = (raw ?? "").trim();
   if (!trimmed) throw new Error("GitHub profile URL is required");
 
@@ -139,12 +142,7 @@ function normalizeGithubProfileUrl(raw: string): { profileUrl: string; username:
 
 function normalizeResumeForGithub(
   resume: ResumeExtraction | NormalizedResumeWithProjects
-): NormalizedResumeWithProjects {
-  const skills =
-    (resume as ResumeExtraction).skills?.map((skill: any) => skill.name ?? skill) ??
-    (resume as NormalizedResume).skills ??
-    [];
-
+): any {
   const projects =
     (resume as any).projects?.map((project: any) => ({
       title: project.title ?? "",
@@ -169,7 +167,7 @@ function normalizeResumeForGithub(
     summary: (resume as any).summary ?? "",
     profiles: (resume as any).profiles ?? {},
     links: (resume as any).links ?? [],
-    skills,
+
     workExperiences: (resume as any).workExperiences ?? [],
     educations: (resume as any).educations ?? [],
     certifications: (resume as any).certifications ?? [],
@@ -177,7 +175,10 @@ function normalizeResumeForGithub(
   };
 }
 
-async function scrapeMarkdown(client: FirecrawlApp, url: string): Promise<{
+async function scrapeMarkdown(
+  client: FirecrawlApp,
+  url: string
+): Promise<{
   markdown: string;
   raw?: unknown;
 }> {
@@ -231,18 +232,18 @@ async function buildGraph(params: {
       default: () => [],
       reducer: (_, b) => b ?? [],
     }),
-    resumeProjects: Annotation<z.infer<typeof ResumeProjectsSchema>["projects"]>(
-      {
-        default: () => [],
-        reducer: (_, b) => b ?? [],
-      }
-    ),
-    mappings: Annotation<z.infer<typeof ProjectRepoMappingSchema>["projectMappings"]>(
-      {
-        default: () => [],
-        reducer: (_, b) => b ?? [],
-      }
-    ),
+    resumeProjects: Annotation<
+      z.infer<typeof ResumeProjectsSchema>["projects"]
+    >({
+      default: () => [],
+      reducer: (_, b) => b ?? [],
+    }),
+    mappings: Annotation<
+      z.infer<typeof ProjectRepoMappingSchema>["projectMappings"]
+    >({
+      default: () => [],
+      reducer: (_, b) => b ?? [],
+    }),
     projectResults: Annotation<GithubProjectVerification[]>({
       default: () => [],
       reducer: (_, b) => b ?? [],
@@ -331,7 +332,8 @@ async function buildGraph(params: {
         projectTitle: mapping.projectTitle,
         repoName: mapping.repoName,
         repoUrl,
-        status: mapping.status === "MATCHED" && repoUrl ? "MATCHED" : "NOT_FOUND",
+        status:
+          mapping.status === "MATCHED" && repoUrl ? "MATCHED" : "NOT_FOUND",
         matchConfidence: mapping.matchConfidence,
         matchReasoning: mapping.reasoning,
         repoSummary: "",
