@@ -8,11 +8,7 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ResumeDTO,
-  ResumeVerificationsResponse,
-  VerifiedResumesResponse,
-} from "@visume/types";
+import { VerifiedResumesResponse } from "@visume/types";
 import { Button } from "@visume/ui/components/button";
 import {
   Empty,
@@ -28,7 +24,7 @@ import React from "react";
 
 export default function VerfiedResumes() {
   const api = useApiClient();
-  const { data } = useQuery({
+  const { data } = useQuery<VerifiedResumesResponse>({
     queryKey: ["verified-resumes-list"],
     queryFn: async (): Promise<VerifiedResumesResponse> => {
       const res = await api.get("/verify/resumes");

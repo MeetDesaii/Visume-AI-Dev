@@ -38,7 +38,7 @@ const jobCompanySchema = new Schema(
       },
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const jobKeywordSchema = new Schema(
@@ -75,7 +75,7 @@ const jobKeywordSchema = new Schema(
       index: true,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 /* ---------- Main Schema ---------- */
@@ -113,7 +113,7 @@ const jobSchema = new Schema(
     versionKey: false,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 /* ---------- Indexes ---------- */
@@ -133,7 +133,7 @@ jobSchema.index(
       "company.name": 5,
       description: 3,
     },
-  }
+  },
 );
 
 // Compound indexes for common queries

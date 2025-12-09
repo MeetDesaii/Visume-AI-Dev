@@ -21,7 +21,7 @@ const getTransporter = (): nodemailer.Transporter => {
 
 export async function sendWelcomeEmail(
   email: string,
-  firstName?: string
+  firstName?: string,
 ): Promise<void> {
   try {
     await getTransporter().sendMail({
@@ -51,7 +51,7 @@ export async function sendWelcomeEmail(
 
 export async function sendAnalysisReport(
   email: string,
-  analysisData: any
+  analysisData: any,
 ): Promise<void> {
   try {
     await getTransporter().sendMail({
@@ -85,7 +85,7 @@ export async function sendAnalysisReport(
 
 export async function sendCreditsLowNotification(
   email: string,
-  creditsRemaining: number
+  creditsRemaining: number,
 ): Promise<void> {
   try {
     await getTransporter().sendMail({

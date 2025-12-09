@@ -23,7 +23,7 @@ const SuggestionsOperationSchema = new Schema(
       maxlength: [5000, "Operation value cannot exceed 5000 characters"],
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const SuggestionSchema = new Schema(
@@ -99,7 +99,7 @@ const SuggestionSchema = new Schema(
   {
     timestamps: true,
     collection: "suggestions",
-  }
+  },
 );
 
 // ============================================
@@ -113,7 +113,7 @@ SuggestionSchema.index({ resumeReview: 1, sectionName: 1 });
 // SUGGESTION STATIC METHODS
 // ============================================
 SuggestionSchema.statics.findByResumeReview = function (
-  reviewId: Types.ObjectId
+  reviewId: Types.ObjectId,
 ) {
   return this.find({ resumeReview: reviewId }).sort({
     priority: -1,
@@ -122,7 +122,7 @@ SuggestionSchema.statics.findByResumeReview = function (
 };
 
 SuggestionSchema.statics.findPendingSuggestions = function (
-  reviewId: Types.ObjectId
+  reviewId: Types.ObjectId,
 ) {
   return this.find({
     resumeReview: reviewId,
@@ -131,7 +131,7 @@ SuggestionSchema.statics.findPendingSuggestions = function (
 };
 
 SuggestionSchema.statics.findCriticalSuggestions = function (
-  reviewId: Types.ObjectId
+  reviewId: Types.ObjectId,
 ) {
   return this.find({
     resumeReview: reviewId,
@@ -161,15 +161,15 @@ SuggestionSchema.pre("save", function (next) {
     if (!operation.actual || operation.actual.trim().length === 0) {
       return next(
         new Error(
-          "REPLACE operation requires 'actual' field with the original text"
-        )
+          "REPLACE operation requires 'actual' field with the original text",
+        ),
       );
     }
     if (!operation.value || operation.value.trim().length === 0) {
       return next(
         new Error(
-          "REPLACE operation requires 'value' field with the replacement text"
-        )
+          "REPLACE operation requires 'value' field with the replacement text",
+        ),
       );
     }
   } else if (operation.action === SuggestionsOperationAction.ADD) {
@@ -184,8 +184,8 @@ SuggestionSchema.pre("save", function (next) {
     if (!operation.actual || operation.actual.trim().length === 0) {
       return next(
         new Error(
-          "REMOVE operation requires 'actual' field with the text being removed"
-        )
+          "REMOVE operation requires 'actual' field with the text being removed",
+        ),
       );
     }
   }

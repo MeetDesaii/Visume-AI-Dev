@@ -1,17 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
-
-interface UploadResumeResponse {
-  resume: {
-    filename: string;
-    id: string;
-    originalName: string;
-    s3Url: string;
-    uploadedAt: Date;
-    rawText: string;
-  };
-}
+import { UploadResumeResponse } from "@visume/types";
 
 interface UploadResumeVariables {
   file: File;
@@ -34,12 +24,12 @@ export const useResumeUpload = () => {
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total && onProgress) {
               const progress = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
+                (progressEvent.loaded * 100) / progressEvent.total,
               );
               onProgress(progress);
             }
           },
-        }
+        },
       );
 
       return response.data;

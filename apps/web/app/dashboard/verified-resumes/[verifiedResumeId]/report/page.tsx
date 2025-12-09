@@ -9,16 +9,16 @@ import {
   IconPhone,
   IconUser,
 } from "@tabler/icons-react";
-import {
-  LinkedInProfileDTO,
-  ResumeDTO,
-  ResumeVerificationsResponse,
-} from "@visume/types";
+import { ResumeDTO, ResumeVerificationsResponse } from "@visume/types";
 import { Badge } from "@visume/ui/components/badge";
 import { Progress } from "@visume/ui/components/progress";
 import { ScrollArea } from "@visume/ui/components/scroll-area";
 import { format } from "date-fns";
 import { GraduationCap } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
+import rehypeReact from "rehype-react";
 
 type Props = {
   params: Promise<{
@@ -33,15 +33,18 @@ export default async function ResumeDetails({ params }: Props) {
   const res = await api.get<ResumeVerificationsResponse>(
     `/verify/resume/${verifiedResumeId}`
   );
+  const verification = res.data.data;
+
+  if (!verification) {
+    return <div className="p-6">Verification not found.</div>;
+  }
   const getScoreColor = (score: number) => {
     if (score >= 80) return "bg-green-500";
     if (score >= 50) return "bg-yellow-500";
     return "bg-red-500";
   };
 
-  const data = res.data.data;
-  const resume = data.resume as ResumeDTO;
-  const linkedinProfile = data.linkedinProfile as LinkedInProfileDTO;
+  const resume = verification.resume as ResumeDTO;
 
   return (
     <div className="grid grid-cols-[1fr_0.9fr] gap-3">
@@ -53,7 +56,7 @@ export default async function ResumeDetails({ params }: Props) {
                 {resume.firstName} {resume.lastName}
               </h1>
               <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full border border-green-200">
-                {data.status}
+                {verification.status}
               </span>
             </div>
             <p className="text-sm text-gray-500">Profile Verification Report</p>
@@ -63,12 +66,12 @@ export default async function ResumeDetails({ params }: Props) {
             <div className="text-right">
               <div className="text-sm text-gray-500">Overall Match</div>
               <div className="text-3xl font-bold text-gray-900">
-                {data.overallScore}/100
+                {verification.overallScore}/100
               </div>
             </div>
             <div className="w-16 h-16 rounded-full border-4 border-gray-100 flex items-center justify-center bg-white shadow-inner">
               <div
-                className={`w-3 h-3 rounded-full ${getScoreColor(data.overallScore)}`}
+                className={`w-3 h-3 rounded-full ${getScoreColor(verification.overallScore)}`}
               ></div>
             </div>
           </div>
@@ -84,7 +87,7 @@ export default async function ResumeDetails({ params }: Props) {
                 Match Breakdown
               </h2>
               <div className="space-y-4">
-                {data.sectionScores.map((item, index) => (
+                {verification.sectionScores.map((item, index) => (
                   <div key={index}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="capitalize font-medium text-gray-700">
@@ -220,12 +223,15 @@ export default async function ResumeDetails({ params }: Props) {
             Analysis Findings
           </h2>
         </div>
-        <div className="bg-white rounded-xl  p-4">
-          <ul className="list-disc list-inside text-sm space-y-3">
-            {data.findings.map((line, idx) => {
-              return <li key={idx}>{line}</li>;
-            })}
-          </ul>
+        <div className="bg-white rounded-xl  p-4 markdown-content">
+          {verification.findings && (
+            <Markdown
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+              rehypePlugins={[rehypeReact]}
+            >
+              {verification.findings.replaceAll("<br>", "")}
+            </Markdown>
+          )}
         </div>
       </ScrollArea>
     </div>

@@ -2,7 +2,7 @@ export { extractResumeContent, tailorResumeContent } from "./resume.service";
 export {
   runResumeLinkedInVerification,
   type NormalizedResume,
-  type VerificationAgentResult,
+  type VerificationResult,
   type VerificationSectionScore,
 } from "./verification.service";
 export {

@@ -6,12 +6,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { InitialSetupDetails } from "@/app/initial/page";
-
-type JobDescriptionMutationPayload = {
-  title: string;
-  description: string;
-  company: string;
-};
+import {
+  CreateJobPayload,
+  CreateJobResponse,
+  ResumeExtractionResponse,
+} from "@visume/types";
 
 export default function ProccessScreen({
   resumeAndJobDetails,
@@ -25,11 +24,15 @@ export default function ProccessScreen({
   const api = useApiClient();
   const router = useRouter();
 
-  const analyzeJobDescription = useMutation({
+  const analyzeJobDescription = useMutation<
+    CreateJobResponse,
+    Error,
+    CreateJobPayload
+  >({
     mutationKey: ["analyze-job"],
-    mutationFn: async (info: JobDescriptionMutationPayload) => {
+    mutationFn: async (info: CreateJobPayload) => {
       const { title, description, company } = info;
-      const res = await api.post("/jobs", {
+      const res = await api.post<CreateJobResponse>("/jobs", {
         job: { title, description, company },
       });
       return res.data;
@@ -45,7 +48,7 @@ export default function ProccessScreen({
     },
   });
 
-  const uploadAndParse = useMutation({
+  const uploadAndParse = useMutation<ResumeExtractionResponse, any, string>({
     mutationKey: ["upload-and-parse"],
     mutationFn: async (jobId: string) => {
       const formData = new FormData();
@@ -61,11 +64,15 @@ export default function ProccessScreen({
       formData.append("resume", resumeAndJobDetails.resume.file);
       formData.append("jobId", jobId);
 
-      const res = await api.post("/resumes/extract", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const res = await api.post<ResumeExtractionResponse>(
+        "/resumes/extract",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
 
       console.log("Upload response:", res.data);
       return res.data;
@@ -85,7 +92,7 @@ export default function ProccessScreen({
     onError: (error: any) => {
       console.error(error);
       toast.error(
-        `Failed to upload resume: ${error.response?.data?.error || error.message}`
+        `Failed to upload resume: ${error.response?.data?.error || error.message}`,
       );
     },
   });

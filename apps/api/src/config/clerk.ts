@@ -1,19 +1,8 @@
 // src/middleware/clerk.ts
 import type { RequestHandler } from "express";
 import { clerkClient, getAuth, requireAuth } from "@clerk/express";
+import { OptionalAuthOptions, OptionalAuthPayload } from "@visume/types";
 import config from "./env";
-
-type OptionalAuthPayload = {
-  signedIn: boolean;
-  userId: string | null;
-  sessionId: string | null;
-  orgId: string | null;
-};
-
-type OptionalAuthOptions = {
-  /** If true, also fetch and attach the full Clerk user object as `req.currentUser`. Default: false */
-  loadUser?: boolean;
-};
 
 // Explicit annotation avoids TS2742 "cannot be named" errors
 export const clerkAuth: RequestHandler = requireAuth();

@@ -60,7 +60,7 @@ export const schemas = {
           endDate: z.string().datetime().optional(),
           description: z.string(),
           achievements: z.array(z.string()).optional(),
-        })
+        }),
       ),
       education: z.array(
         z.object({
@@ -69,7 +69,7 @@ export const schemas = {
           field: z.string(),
           startDate: z.string().datetime(),
           endDate: z.string().datetime().optional(),
-        })
+        }),
       ),
       skills: z.array(z.string()),
     }),

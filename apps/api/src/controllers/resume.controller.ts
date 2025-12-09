@@ -10,10 +10,21 @@ import { extractTextFromBuffer } from "@visume/lib";
 import { Resume, ResumeReview, Suggestion } from "@visume/database";
 import { AppError, asyncHandler } from "../middleware/error.middleware";
 import { isValidMongoId, transformAIResponseForDB } from "../lib";
-import { ResumeReviewStatus } from "@visume/types";
+import {
+  ResumeReviewStatus,
+  ResumeDetailResponse,
+  ResumeExtractionResponse,
+  ResumeListResponse,
+  ResumeReviewLookupResponse,
+  ResumeTailorResponse,
+} from "@visume/types";
 
 export const extractResumeInfo = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (
+    req: Request,
+    res: Response<ResumeExtractionResponse>,
+    next: NextFunction,
+  ) => {
     const resume = req.file;
     // const { jobId } = req.body;
     const jobId = req.body.jobId;
@@ -31,11 +42,11 @@ export const extractResumeInfo = asyncHandler(
 
     const data = await extractTextFromBuffer(
       resume.originalname,
-      resume.buffer
+      resume.buffer,
     );
     if (!data.success) {
       return next(
-        new AppError(400, "Error when extracting content from the file!")
+        new AppError(400, "Error when extracting content from the file!"),
       );
     }
 
@@ -80,17 +91,21 @@ export const extractResumeInfo = asyncHandler(
       res.json({
         success: true,
         data: {
-          resume: newResume,
+          resume: newResume.toObject() as any,
         },
       });
     } else {
       return next(new AppError(400, validated.error.message));
     }
-  }
+  },
 );
 
 export const getAllResumes = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (
+    req: Request,
+    res: Response<ResumeListResponse>,
+    next: NextFunction,
+  ) => {
     const userId = req.user?._id;
 
     if (!userId)
@@ -98,23 +113,29 @@ export const getAllResumes = asyncHandler(
 
     const resumes = await Resume.find({
       owner: userId,
-    }).select(
-      "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata createdAt updatedAt"
-    );
+    })
+      .select(
+        "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata createdAt updatedAt",
+      )
+      .lean({ virtuals: true });
 
     if (!resumes) return next(new AppError(400, "No resume found!"));
 
     res.status(200).json({
       success: true,
       data: {
-        resumes,
+        resumes: resumes as any[],
       },
     });
-  }
+  },
 );
 
 export const getResume = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (
+    req: Request,
+    res: Response<ResumeDetailResponse>,
+    next: NextFunction,
+  ) => {
     const resumeId = req.params.resumeId;
     const userId = req.user?._id;
     if (!resumeId) return next(new AppError(400, "No resume ID found!"));
@@ -123,21 +144,27 @@ export const getResume = asyncHandler(
     const resume = await Resume.findOne({
       _id: resumeId,
       owner: userId,
-    }).populate("job");
+    })
+      .populate("job")
+      .lean({ virtuals: true });
 
     if (!resume) return next(new AppError(400, "Resume not found."));
 
     res.status(200).json({
       success: true,
       data: {
-        resume,
+        resume: resume as any,
       },
     });
-  }
+  },
 );
 
 export const tailorResume = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (
+    req: Request,
+    res: Response<ResumeTailorResponse>,
+    next: NextFunction,
+  ) => {
     const { resumeId } = req.params;
     const userId = req.user?._id;
 
@@ -145,7 +172,7 @@ export const tailorResume = asyncHandler(
     if (!userId) return next(new AppError(401, "User not found resumeId"));
     if (!isValidMongoId(resumeId))
       return next(
-        new AppError(400, "Provided resumeId is not a valid mongodb ID")
+        new AppError(400, "Provided resumeId is not a valid mongodb ID"),
       );
 
     const startTime = new Date();
@@ -175,8 +202,8 @@ export const tailorResume = asyncHandler(
       return next(
         new AppError(
           400,
-          "The return data is not structed as needed! Try again"
-        )
+          "The return data is not structed as needed! Try again",
+        ),
       );
 
     const suggestionDocs = await Suggestion.insertMany(
@@ -194,7 +221,7 @@ export const tailorResume = asyncHandler(
         documentPath: s.documentPath,
         sectionName: s.sectionName,
         acceptanceStatus: s.acceptanceStatus || "PENDING",
-      }))
+      })),
     );
 
     const finishTime = new Date();
@@ -209,14 +236,18 @@ export const tailorResume = asyncHandler(
     res.status(200).json({
       success: true,
       data: {
-        review: completedReview,
+        review: completedReview.toObject() as any,
       },
     });
-  }
+  },
 );
 
 export const getResumeReview = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (
+    req: Request,
+    res: Response<ResumeReviewLookupResponse>,
+    next: NextFunction,
+  ) => {
     const { resumeId } = req.params;
     console.log("🚀 ~ resumeId:", resumeId);
     const userId = req.user?._id;
@@ -226,7 +257,7 @@ export const getResumeReview = asyncHandler(
     if (!userId) return next(new AppError(401, "User not found resumeId"));
     if (!isValidMongoId(resumeId))
       return next(
-        new AppError(400, "Provided resumeId is not a valid mongodb ID")
+        new AppError(400, "Provided resumeId is not a valid mongodb ID"),
       );
 
     const resumeReview = await ResumeReview.findOne({
@@ -238,16 +269,16 @@ export const getResumeReview = asyncHandler(
       res.status(200).json({
         success: true,
         data: {
-          review: {},
+          review: null,
         },
       });
     } else {
       res.status(200).json({
         success: true,
         data: {
-          review: resumeReview,
+          review: resumeReview.toObject() as any,
         },
       });
     }
-  }
+  },
 );

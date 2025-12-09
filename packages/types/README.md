@@ -49,21 +49,27 @@ import { ResumeAnalysis, ParsedResume } from "@visume/types/ai";
 ## Type Categories
 
 ### Models
+
 Plain TypeScript interfaces matching database schemas (without Mongoose Document extension).
 
 ### Enums
+
 String literal union types with companion constants for runtime access.
 
 ### API
+
 Request/response wrappers, error types, authentication payloads.
 
 ### AI
+
 Types for AI analysis, generation, parsing, and configuration.
 
 ### Web
+
 Frontend-specific types for hooks, forms, and pages.
 
 ### Common
+
 Shared utility types like pagination, metadata, and helpers.
 
 ## Development

@@ -1,26 +1,31 @@
 "use client";
 import ResumeContent from "./resume-content";
 import ResumeView from "./resume-view";
-import ResumeScores from "./resume-scores";
 import { useQuery } from "@tanstack/react-query";
 import { useApiClient } from "@/hooks/use-api-client";
 import ResumeSuggestionsList from "./resume-suggestion-list";
+import {
+  ResumeDetailResponse,
+  ResumeReviewLookupResponse,
+} from "@visume/types";
 
 export default function ResumeDetailsPage({ id }: { id: string }) {
   const api = useApiClient();
 
-  const resumeQuery = useQuery({
+  const resumeQuery = useQuery<ResumeDetailResponse>({
     queryKey: ["resume", id],
     queryFn: async () => {
-      const res = await api.get(`/resumes/${id}`);
+      const res = await api.get<ResumeDetailResponse>(`/resumes/${id}`);
       return res.data;
     },
   });
 
-  const reviewQuery = useQuery({
+  const reviewQuery = useQuery<ResumeReviewLookupResponse>({
     queryKey: ["review", id],
     queryFn: async () => {
-      const res = await api.get(`/resumes/${id}/tailor`);
+      const res = await api.get<ResumeReviewLookupResponse>(
+        `/resumes/${id}/tailor`,
+      );
       return res.data;
     },
   });

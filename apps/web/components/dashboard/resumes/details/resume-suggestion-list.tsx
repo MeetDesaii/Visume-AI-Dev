@@ -102,7 +102,7 @@ export default function ResumeSuggestionsList({
                   "py-4 px-3 rounded-md  border mx-3 mb-3 transition-all ease-out",
                   item.priority === "RECOMMENDED"
                     ? "bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 hover:ring-primary ring-2 ring-transparent"
-                    : "bg-destructive/15 dark:bg-destructive/20 hover:bg-destructive/20 hover:ring-destructive ring-2 ring-transparent"
+                    : "bg-destructive/15 dark:bg-destructive/20 hover:bg-destructive/20 hover:ring-destructive ring-2 ring-transparent",
                 )}
                 key={item._id}
               >
@@ -116,7 +116,7 @@ export default function ResumeSuggestionsList({
                     className={cn(
                       item.priority === "RECOMMENDED"
                         ? "border-primary/40 text-primary"
-                        : "border-destructive/40 text-destructive"
+                        : "border-destructive/40 text-destructive",
                     )}
                   >
                     {item.priority}
@@ -132,7 +132,7 @@ export default function ResumeSuggestionsList({
                     "my-4",
                     item.priority === "RECOMMENDED"
                       ? "bg-primary/40 "
-                      : "bg-destructive/40 "
+                      : "bg-destructive/40 ",
                   )}
                 />
                 <div className="space-y-4">
@@ -149,7 +149,7 @@ export default function ResumeSuggestionsList({
                             "line-through",
                             item.priority === "RECOMMENDED"
                               ? "border-primary/40 text-primary"
-                              : "border-destructive/40 text-destructive"
+                              : "border-destructive/40 text-destructive",
                           )}
                         >
                           {item.operation.actual}
@@ -183,7 +183,7 @@ export default function ResumeSuggestionsList({
                           className={cn(
                             item.priority === "RECOMMENDED"
                               ? "border-primary/40 text-primary"
-                              : "border-destructive/40 text-destructive"
+                              : "border-destructive/40 text-destructive",
                           )}
                         >
                           {item.operation.value}

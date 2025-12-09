@@ -8,13 +8,13 @@ const ProfilesSchema = z
       .string()
       .trim()
       .describe(
-        "LinkedIn profile URL or username. Empty string if not provided."
+        "LinkedIn profile URL or username. Empty string if not provided.",
       ),
     github: z
       .string()
       .trim()
       .describe(
-        "GitHub profile URL or username. Empty string if not provided."
+        "GitHub profile URL or username. Empty string if not provided.",
       ),
   })
   .strict()
@@ -25,14 +25,14 @@ const SectionCompletionSchema = z
     missingFields: z
       .array(z.string().trim())
       .describe(
-        "List of field names that are empty or missing from the resume (e.g., ['email', 'phoneNumber', 'summery'])"
+        "List of field names that are empty or missing from the resume (e.g., ['email', 'phoneNumber', 'summery'])",
       ),
     score: z
       .number()
       .min(0)
       .max(1)
       .describe(
-        "Completeness score from 0.0 to 1.0. 1.0 = all sections present, 0.5 = several missing, 0.0 = severely incomplete"
+        "Completeness score from 0.0 to 1.0. 1.0 = all sections present, 0.5 = several missing, 0.0 = severely incomplete",
       ),
     finishedScoring: z
       .boolean()
@@ -48,17 +48,17 @@ const ContentLengthSchema = z
       .min(0)
       .max(1)
       .describe(
-        "Content depth score from 0.0 to 1.0. 1.0 = rich quantified details, 0.5 = basic info, 0.0 = very sparse"
+        "Content depth score from 0.0 to 1.0. 1.0 = rich quantified details, 0.5 = basic info, 0.0 = very sparse",
       ),
     pros: z
       .string()
       .describe(
-        "Strengths in the resume content (e.g., 'Strong quantified achievements in work experience'). Empty string if none."
+        "Strengths in the resume content (e.g., 'Strong quantified achievements in work experience'). Empty string if none.",
       ),
     cons: z
       .string()
       .describe(
-        "Weaknesses in the resume content (e.g., 'Project descriptions lack technical detail'). Empty string if none."
+        "Weaknesses in the resume content (e.g., 'Project descriptions lack technical detail'). Empty string if none.",
       ),
     finishedScoring: z
       .boolean()
@@ -76,7 +76,7 @@ const ResumeScoreSchema = z
       .min(0)
       .max(1)
       .describe(
-        "Overall resume score, calculated as average of sectionCompletion.score and contentLength.score"
+        "Overall resume score, calculated as average of sectionCompletion.score and contentLength.score",
       ),
   })
   .strict()
@@ -88,7 +88,7 @@ const AchievementSchema = z
       .string()
       .trim()
       .describe(
-        "A single achievement or accomplishment bullet point, preferably with quantified results"
+        "A single achievement or accomplishment bullet point, preferably with quantified results",
       ),
   })
   .strict()
@@ -100,17 +100,17 @@ const ProjectSchema = z
     description: z
       .string()
       .describe(
-        "Brief overview of what the project does or accomplished. Empty string if not provided."
+        "Brief overview of what the project does or accomplished. Empty string if not provided.",
       ),
     achievements: z
       .array(AchievementSchema)
       .describe(
-        "Key accomplishments, features, or results from this project. Empty array if none listed."
+        "Key accomplishments, features, or results from this project. Empty array if none listed.",
       ),
     skills: z
       .array(z.string().trim())
       .describe(
-        "Technologies, programming languages, tools, or frameworks used. Empty array if none listed."
+        "Technologies, programming languages, tools, or frameworks used. Empty array if none listed.",
       ),
   })
   .strict()
@@ -122,30 +122,30 @@ const EducationSchema = z
       .string()
       .trim()
       .describe(
-        "Name of the school, university, or educational institution (REQUIRED)"
+        "Name of the school, university, or educational institution (REQUIRED)",
       ),
     degreeTypeName: z
       .string()
       .trim()
       .describe(
-        "Type of degree (e.g., 'Bachelor of Science', 'Master of Arts', 'PhD', 'Associate'). Empty string if not specified."
+        "Type of degree (e.g., 'Bachelor of Science', 'Master of Arts', 'PhD', 'Associate'). Empty string if not specified.",
       ),
     fieldOfStudyName: z
       .string()
       .trim()
       .describe(
-        "Major or field of study (e.g., 'Computer Science', 'Business Administration'). Empty string if not specified."
+        "Major or field of study (e.g., 'Computer Science', 'Business Administration'). Empty string if not specified.",
       ),
     graduationAt: z
       .string()
       .nullable()
       .describe(
-        "Graduation date in 'YYYY-MM' or 'YYYY' format. Null if not provided or still enrolled."
+        "Graduation date in 'YYYY-MM' or 'YYYY' format. Null if not provided or still enrolled.",
       ),
     description: z
       .string()
       .describe(
-        "Additional details such as GPA, honors, relevant coursework, or activities. Empty string if not provided."
+        "Additional details such as GPA, honors, relevant coursework, or activities. Empty string if not provided.",
       ),
   })
   .strict()
@@ -164,34 +164,34 @@ const ExperienceSchema = z
     location: z
       .string()
       .describe(
-        "Job location (e.g., 'San Francisco, CA', 'Remote'). Empty string if not specified."
+        "Job location (e.g., 'San Francisco, CA', 'Remote'). Empty string if not specified.",
       ),
     startedAt: z
       .string()
       .nullable()
       .describe(
-        "Start date in 'YYYY-MM' or 'YYYY' format. Null if not provided."
+        "Start date in 'YYYY-MM' or 'YYYY' format. Null if not provided.",
       ),
     endedAt: z
       .string()
       .nullable()
       .describe(
-        "End date in 'YYYY-MM' or 'YYYY' format. Null if not provided or if current position."
+        "End date in 'YYYY-MM' or 'YYYY' format. Null if not provided or if current position.",
       ),
     role: z
       .string()
       .describe(
-        "Brief description of the role and responsibilities. Empty string if not provided."
+        "Brief description of the role and responsibilities. Empty string if not provided.",
       ),
     achievements: z
       .array(AchievementSchema)
       .describe(
-        "Accomplishments and impact in this role, ideally with quantified results. Empty array if none listed."
+        "Accomplishments and impact in this role, ideally with quantified results. Empty array if none listed.",
       ),
     skills: z
       .array(z.string().trim())
       .describe(
-        "Skills, technologies, or tools used in this position. Empty array if none listed."
+        "Skills, technologies, or tools used in this position. Empty array if none listed.",
       ),
   })
   .strict()
@@ -207,25 +207,25 @@ const CertificationSchema = z
       .string()
       .trim()
       .describe(
-        "Organization that issued the certification. Empty string if not provided."
+        "Organization that issued the certification. Empty string if not provided.",
       ),
     startDate: z
       .string()
       .nullable()
       .describe(
-        "Date the certification was issued in 'YYYY-MM' or 'YYYY' format. Null if not provided."
+        "Date the certification was issued in 'YYYY-MM' or 'YYYY' format. Null if not provided.",
       ),
     expiryDate: z
       .string()
       .nullable()
       .describe(
-        "Date the certification expires in 'YYYY-MM' or 'YYYY' format. Null if no expiry or not provided."
+        "Date the certification expires in 'YYYY-MM' or 'YYYY' format. Null if no expiry or not provided.",
       ),
     link: z
       .string()
       .trim()
       .describe(
-        "URL to verify the certification. Empty string if not provided."
+        "URL to verify the certification. Empty string if not provided.",
       ),
   })
   .strict()
@@ -247,7 +247,7 @@ const SkillsCategorySchema = z
       .string()
       .trim()
       .describe(
-        "Category label (e.g., 'Programming Languages', 'Frameworks', 'Tools', 'Soft Skills')"
+        "Category label (e.g., 'Programming Languages', 'Frameworks', 'Tools', 'Soft Skills')",
       ),
     skills: z
       .array(SkillSchema)
@@ -271,7 +271,7 @@ export const ResumeExtractionSchema = z
       .string()
       .trim()
       .describe(
-        "The name of the resume. Which post is resume about. e.g. Full Stack Web Developer, Mobile Developer, Android Developer etc. (REQUIRED)"
+        "The name of the resume. Which post is resume about. e.g. Full Stack Web Developer, Mobile Developer, Android Developer etc. (REQUIRED)",
       ),
     firstName: z.string().trim().describe("First/given name only (REQUIRED)"),
     lastName: z.string().trim().describe("Last/family name only (REQUIRED)"),
@@ -279,7 +279,7 @@ export const ResumeExtractionSchema = z
     location: z
       .string()
       .describe(
-        "Current location of the candidate (e.g., 'San Francisco, CA'). Empty string if not provided."
+        "Current location of the candidate (e.g., 'San Francisco, CA'). Empty string if not provided.",
       ),
     email: z
       .string()
@@ -292,19 +292,19 @@ export const ResumeExtractionSchema = z
     summary: z
       .string()
       .describe(
-        "Professional summary or objective statement. NOTE: Field name is 'summery' not 'summary'. Empty string if not provided."
+        "Professional summary or objective statement. NOTE: Field name is 'summery' not 'summary'. Empty string if not provided.",
       ),
 
     links: z
       .array(z.string().trim())
       .describe(
-        "Other URLs mentioned in the resume (portfolio, personal website, blog, etc.). Empty array if none."
+        "Other URLs mentioned in the resume (portfolio, personal website, blog, etc.). Empty array if none.",
       ),
 
     projects: z
       .array(ProjectSchema)
       .describe(
-        "Personal, academic, or side projects. Empty array if none listed."
+        "Personal, academic, or side projects. Empty array if none listed.",
       ),
     educations: z
       .array(EducationSchema)
@@ -318,28 +318,28 @@ export const ResumeExtractionSchema = z
     certifications: z
       .array(CertificationSchema)
       .describe(
-        "Professional certifications, licenses, or credentials. Empty array if none listed."
+        "Professional certifications, licenses, or credentials. Empty array if none listed.",
       ),
     skills: z
       .array(SkillSchema)
       .describe(
-        "Flat list of all skills mentioned in the resume. Empty array if none listed."
+        "Flat list of all skills mentioned in the resume. Empty array if none listed.",
       ),
     skillsCategories: z
       .array(SkillsCategorySchema)
       .describe(
-        "Skills organized by category if the resume groups them. Empty array if not categorized or no skills."
+        "Skills organized by category if the resume groups them. Empty array if not categorized or no skills.",
       ),
 
     resumeSections: z
       .array(ResumeSectionsSchema)
       .describe(
-        "List of all the sections that are present in the provided resume and the ones you have extracted content from."
+        "List of all the sections that are present in the provided resume and the ones you have extracted content from.",
       ),
   })
   .strict()
   .describe(
-    "Complete structured extraction of a resume including personal info, experience, education, skills, and quality scoring"
+    "Complete structured extraction of a resume including personal info, experience, education, skills, and quality scoring",
   );
 
 export type ResumeExtraction = z.infer<typeof ResumeExtractionSchema>;
@@ -350,5 +350,5 @@ export const ResumeExtractionJsonSchema = zodToJsonSchema(
   {
     name: "ResumeExtraction",
     $refStrategy: "none", // Important: inline all definitions to avoid $ref issues
-  }
+  },
 );

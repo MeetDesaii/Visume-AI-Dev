@@ -199,7 +199,7 @@ const resumeSchema = new Schema(
     versionKey: false,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 /* ---------- Virtuals ---------- */
@@ -259,7 +259,7 @@ resumeSchema.index(
       firstName: 1,
       lastName: 1,
     },
-  }
+  },
 );
 
 resumeSchema.index({ ownerId: 1 }, { unique: true, sparse: true });

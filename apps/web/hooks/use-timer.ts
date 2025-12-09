@@ -18,7 +18,7 @@ export function useTimer() {
       setElapsedMs(current);
       rafRef.current = requestAnimationFrame(loop);
     },
-    [isRunning]
+    [isRunning],
   );
 
   const start = useCallback(() => {

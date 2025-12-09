@@ -24,7 +24,7 @@ router.post(
   uploadResume,
   handleUploadError,
   validateFileUploaded,
-  extractResumeInfo
+  extractResumeInfo,
 );
 router.post("/:resumeId/tailor", tailorResume);
 router.get("/:resumeId/tailor", getResumeReview);

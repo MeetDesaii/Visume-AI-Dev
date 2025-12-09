@@ -20,7 +20,7 @@ export default clerkMiddleware(
     signUpUrl: "/sign-up",
     afterSignInUrl: "/dashboard",
     afterSignUpUrl: "/dashboard",
-  }
+  },
 );
 
 export const config = {

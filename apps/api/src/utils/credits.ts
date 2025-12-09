@@ -3,7 +3,7 @@ import { sendCreditsLowNotification } from "../services/email.service";
 
 export async function checkUserCredits(
   user: any,
-  required: number
+  required: number,
 ): Promise<boolean> {
   if (user.subscription.tier === "enterprise") {
     return true; // Unlimited credits for enterprise
@@ -22,7 +22,7 @@ export async function checkUserCredits(
     if (user.subscription.creditsRemaining - required <= 2) {
       await sendCreditsLowNotification(
         user.email,
-        user.subscription.creditsRemaining - required
+        user.subscription.creditsRemaining - required,
       );
     }
     return true;
@@ -33,7 +33,7 @@ export async function checkUserCredits(
 
 export async function deductCredits(
   userId: string,
-  amount: number
+  amount: number,
 ): Promise<void> {
   await User.findByIdAndUpdate(userId, {
     $inc: { "subscription.creditsRemaining": -amount },

@@ -22,7 +22,7 @@ export const gracefulShutdown = async (server: Server) => {
   // Force close after 30 seconds
   setTimeout(() => {
     logger.error(
-      "Could not close connections in time, forcefully shutting down"
+      "Could not close connections in time, forcefully shutting down",
     );
     process.exit(1);
   }, 30000);

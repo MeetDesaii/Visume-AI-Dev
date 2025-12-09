@@ -30,31 +30,25 @@ export const verifyResumeWithLinkedIn = asyncHandler(
     const linkedinFile = req.file;
     const userId = req.user?._id;
 
-    if (!userId) {
-      return next(new AppError(401, "User not found"));
-    }
-    if (!linkedinFile) {
+    if (!userId) return next(new AppError(401, "User not found"));
+    if (!linkedinFile)
       return next(new AppError(400, "LinkedIn PDF is required"));
-    }
-    if (!resumeId || !isValidMongoId(resumeId)) {
+    if (!resumeId || !isValidMongoId(resumeId))
       return next(new AppError(400, "A valid resumeId is required"));
-    }
 
     const resume = await Resume.findOne({ _id: resumeId, owner: userId });
-    if (!resume) {
+    if (!resume)
       return next(new AppError(404, "Resume not found for this user"));
-    }
 
     const parsedPdf = await extractTextFromBuffer(
       linkedinFile.originalname,
       linkedinFile.buffer
     );
 
-    if (!parsedPdf.success) {
+    if (!parsedPdf.success)
       return next(
         new AppError(400, parsedPdf.error ?? "Unable to read LinkedIn PDF")
       );
-    }
 
     const verificationResult = await runResumeLinkedInVerification({
       resume: resume.toObject() as any,
@@ -76,8 +70,11 @@ export const verifyResumeWithLinkedIn = asyncHandler(
       resume: resume._id,
       linkedinProfile: linkedinProfileDoc._id,
       status: "COMPLETED",
+
+      // Store the beautiful markdown report directly.
+      // Ensure Schema is: findings: { type: String }
       findings: verificationResult.findings,
-      resumeAssertions: verificationResult.resumeAssertions,
+
       sectionScores: verificationResult.sectionScores,
       overallScore: verificationResult.overallScore,
       scoringMethod: verificationResult.scoringMethod,
@@ -89,8 +86,8 @@ export const verifyResumeWithLinkedIn = asyncHandler(
     res.status(200).json({
       success: true,
       data: {
-        verification: verificationDoc,
-        linkedinProfile: linkedinProfileDoc,
+        verification: verificationDoc.toObject() as any,
+        linkedinProfile: linkedinProfileDoc.toObject() as any,
       } as any,
     });
   }
@@ -122,8 +119,7 @@ export const verifyResumeWithGithub = asyncHandler(
       resume.profiles?.github ||
       (resume.links || []).find(
         (link) =>
-          typeof link === "string" &&
-          link.toLowerCase().includes("github.com")
+          typeof link === "string" && link.toLowerCase().includes("github.com")
       ) ||
       "";
 
@@ -161,7 +157,7 @@ export const verifyResumeWithGithub = asyncHandler(
 
       res.status(200).json({
         success: true,
-        data: verificationDoc as any,
+        data: verificationDoc.toObject() as any,
       });
     } catch (error) {
       logger.error(error, "GitHub verification failed");
@@ -201,7 +197,7 @@ export const getResumeVerifications = asyncHandler(
 
     res.status(200).json({
       success: true,
-      data: verifications as any,
+      data: (verifications ? verifications.toObject() : null) as any,
     });
   }
 );
@@ -231,7 +227,7 @@ export const getGithubVerifications = asyncHandler(
 
     res.status(200).json({
       success: true,
-      data: verification as any,
+      data: (verification ? verification.toObject() : null) as any,
     });
   }
 );
@@ -259,7 +255,7 @@ export const getAllVerifiedResumes = asyncHandler(
 
     res.status(200).json({
       success: true,
-      data: verifications as any,
+      data: verifications.map((verification) => verification.toObject()) as any,
     });
   }
 );

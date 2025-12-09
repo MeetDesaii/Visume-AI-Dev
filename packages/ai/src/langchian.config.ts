@@ -54,10 +54,10 @@ function ensureSystemMessage(
         content: string;
       }
   >,
-  system: string
+  system: string,
 ) {
   const hasSystem = msgs.some(
-    (m: any) => m?.role === "system" || m?._getType?.() === "system"
+    (m: any) => m?.role === "system" || m?._getType?.() === "system",
   );
   return hasSystem
     ? (msgs as any)
@@ -77,7 +77,7 @@ export async function structuredExtract<TSchema extends z.ZodTypeAny>(
             }
         >;
     systemPrompt?: string;
-  } & LLMRuntimeOptions
+  } & LLMRuntimeOptions,
 ): Promise<z.infer<TSchema>> {
   const {
     schema,
@@ -126,6 +126,6 @@ export async function structuredExtract<TSchema extends z.ZodTypeAny>(
         throw new AbortError(err);
       }
     },
-    { retries, minTimeout: 500, maxTimeout: 5000, factor: 2, randomize: true }
+    { retries, minTimeout: 500, maxTimeout: 5000, factor: 2, randomize: true },
   );
 }

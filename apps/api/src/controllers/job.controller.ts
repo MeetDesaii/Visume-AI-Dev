@@ -7,10 +7,15 @@ import {
 } from "@visume/ai-core";
 import {} from "@visume/ai-core";
 import { Job } from "@visume/database";
+import { CreateJobPayload, CreateJobResponse } from "@visume/types";
 
 export const createJob = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { description, title, company } = req.body.job;
+  async (
+    req: Request,
+    res: Response<CreateJobResponse>,
+    next: NextFunction,
+  ) => {
+    const { description, title, company } = req.body.job as CreateJobPayload;
     const userId = req.user?._id;
 
     if (!userId) {
@@ -34,8 +39,8 @@ export const createJob = asyncHandler(
       return next(
         new AppError(
           400,
-          "Somthing went wrong in openai return response schema"
-        )
+          "Somthing went wrong in openai return response schema",
+        ),
       );
     }
 
@@ -50,6 +55,9 @@ export const createJob = asyncHandler(
       keywords: validated.data.keywords,
     });
 
-    res.status(200).json({ data: { job } });
-  }
+    res.status(201).json({
+      success: true,
+      data: { job: job.toObject() as any },
+    });
+  },
 );

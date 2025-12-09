@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { useState } from "react";
 import VerifyLinkdinProfilePDFList from "@/components/dashboard/verification/verify-linkdin-profile-pdf-list";
 import VerifyResumeList from "@/components/dashboard/verification/verify-resume-list";
 import { IconCircleDashedCheck } from "@tabler/icons-react";
@@ -8,7 +8,7 @@ import { Button } from "@visume/ui/components/button";
 import { Loader2 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useApiClient } from "@/hooks/use-api-client";
-import { ResumeDTO } from "@visume/types";
+import { ResumeDTO, ResumeVerificationResponse } from "@visume/types";
 import { toast } from "sonner";
 import { Separator } from "@visume/ui/components/separator";
 import { useRouter } from "next/navigation";
@@ -20,17 +20,25 @@ export default function VerifyNewPage() {
   const [linkedinFile, setLinkedinFile] = useState<File | null>(null);
   const [isLinkedinUploading, setIsLinkedinUploading] = useState(false);
 
-  const { mutate, isPending } = useMutation({
+  const { mutate, isPending } = useMutation<
+    ResumeVerificationResponse,
+    any,
+    { resumeId: string; file: File }
+  >({
     mutationFn: async (payload: { resumeId: string; file: File }) => {
       const formData = new FormData();
       formData.append("resumeId", payload.resumeId);
       formData.append("linkedinProfile", payload.file);
 
-      const res = await api.post("/verify/linkedin", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const res = await api.post<ResumeVerificationResponse>(
+        "/verify/linkedin",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
 
       return res.data;
     },

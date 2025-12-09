@@ -396,7 +396,7 @@ export function ResumeTextPreview({ text, className }: ResumeTextPreviewProps) {
       <div
         className={cn(
           "flex items-center justify-center h-full text-muted-foreground",
-          className
+          className,
         )}
       >
         <p className="text-sm">No resume content available</p>
