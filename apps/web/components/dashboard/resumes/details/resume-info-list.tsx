@@ -29,7 +29,7 @@ export default function ResumeInfoList({
           {sections.map((section) => (
             <div
               key={section.id}
-              className="p-3 rounded-2xl -xs  border flex justify-between items-center cursor-pointer hover:bg-primary/5 border-neutral-300 hover:border-primary/40 transition-all"
+              className="p-3 rounded-2xl   border flex justify-between items-center cursor-pointer hover:bg-primary/5 border-neutral-300 dark:border-neutral-700 hover:border-primary/40 transition-all"
               onClick={() => {
                 setCurrentOpenedSection(section);
                 setIsSectionViewOpen(true);
@@ -244,7 +244,7 @@ export default function ResumeInfoList({
                 {resume.links.map((link) => (
                   <div
                     key={link}
-                    className="border bg-white  rounded-md p-3  space-y-2"
+                    className="border bg-white dark:bg-accent  rounded-md p-3  space-y-2"
                   >
                     <Link href={link} rel="noopener noreferrer" target="_blank">
                       <Button variant="link" size="sm">

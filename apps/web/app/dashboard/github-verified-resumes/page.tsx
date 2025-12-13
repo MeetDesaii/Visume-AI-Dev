@@ -31,6 +31,7 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { LoaderFive } from "@visume/ui/components/loader";
 
 export default function GithubVerifiedResumesPage() {
   const api = useApiClient();
@@ -83,7 +84,7 @@ export default function GithubVerifiedResumesPage() {
     const resumeGithub =
       selectedResume.profiles?.github ||
       selectedResume.links?.find((l) =>
-        typeof l === "string" ? l.toLowerCase().includes("github.com") : false,
+        typeof l === "string" ? l.toLowerCase().includes("github.com") : false
       ) ||
       "";
     setGithubUrl(resumeGithub);
@@ -91,12 +92,12 @@ export default function GithubVerifiedResumesPage() {
 
   const verification = useMemo(
     () => verificationQuery.data?.data,
-    [verificationQuery.data],
+    [verificationQuery.data]
   );
 
   const projectResults = useMemo(
     () => verification?.projectResults ?? [],
-    [verification?.projectResults],
+    [verification?.projectResults]
   );
 
   const overallScore = verification?.overallScore ?? 0;
@@ -110,125 +111,140 @@ export default function GithubVerifiedResumesPage() {
   );
 
   return (
-    <div className="h-[calc(100vh_-_90px)]">
-      <div className="grid grid-cols-1 lg:grid-cols-[0.4fr_0.6fr] gap-4 h-full">
-        <section className="bg-white border rounded-2xl h-full overflow-hidden">
-          <VerifyResumeList
-            selectedResumeId={selectedResume?._id}
-            onSelect={(resume) => setSelectedResume(resume)}
-          />
-        </section>
+    <div className="relative">
+      <div
+        className={`absolute top-0  size-full grid place-content-center text-2xl font-semibold transition-all duration-500 ease-in  ${runVerification.isPending ? "opacity-100 z-50 " : "opacity-0 -z-50"}`}
+      >
+        <LoaderFive text="Verifying Resume..." />
+      </div>
+      <div
+        className={` ${runVerification.isPending ? "blur-lg pointer-events-none" : ""} transition-all duration-700 ease-in `}
+      >
+        <div className="  grid grid-cols-1 lg:grid-cols-[0.4fr_0.6fr] gap-4 h-full">
+          <section className="h-[calc(100vh_-_90px)] bg-white dark:bg-accent border rounded-2xl  overflow-hidden">
+            <VerifyResumeList
+              selectedResumeId={selectedResume?._id}
+              onSelect={(resume) => setSelectedResume(resume)}
+            />
+          </section>
 
-        <section className="bg-white border rounded-2xl p-6 h-full flex flex-col gap-6">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold">GitHub Verification</h2>
-              <p className="text-sm text-muted-foreground">
-                Verify resume projects against your GitHub repositories.
+          <section className="h-[calc(100vh_-_90px)] bg-white dark:bg-accent border rounded-2xl p-6 flex flex-col gap-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">GitHub Verification</h2>
+                <p className="text-sm text-muted-foreground">
+                  Verify resume projects against your GitHub repositories.
+                </p>
+              </div>
+              {verification ? statusBadge : null}
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <IconBrandGithub size={16} />
+                GitHub Profile URL
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  placeholder="https://github.com/username"
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  disabled={runVerification.isPending}
+                />
+                <Button
+                  onClick={() => runVerification.mutate()}
+                  disabled={
+                    runVerification.isPending ||
+                    !selectedResume ||
+                    !githubUrl.trim()
+                  }
+                >
+                  {runVerification.isPending ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16} />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <IconCircleCheck size={16} />
+                      Verify
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                We will crawl the profile, pick matching repos for your resume
+                projects, and compare descriptions and code signals.
               </p>
             </div>
-            {verification ? statusBadge : null}
-          </div>
 
-          <div className="space-y-3">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <IconBrandGithub size={16} />
-              GitHub Profile URL
-            </label>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Input
-                placeholder="https://github.com/username"
-                value={githubUrl}
-                onChange={(e) => setGithubUrl(e.target.value)}
-                disabled={runVerification.isPending}
-              />
-              <Button
-                onClick={() => runVerification.mutate()}
-                disabled={
-                  runVerification.isPending ||
-                  !selectedResume ||
-                  !githubUrl.trim()
-                }
-              >
-                {runVerification.isPending ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <IconCircleCheck size={16} />
-                    Verify
-                  </>
-                )}
-              </Button>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col">
+                <span className="text-xs uppercase text-muted-foreground">
+                  Overall score
+                </span>
+                <span className="text-3xl font-semibold">
+                  {overallScore}/100
+                </span>
+              </div>
+              {verification ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <IconRefresh size={16} />
+                  Repos analyzed: {projectResults.length}
+                </div>
+              ) : null}
             </div>
-            <p className="text-xs text-muted-foreground">
-              We will crawl the profile, pick matching repos for your resume
-              projects, and compare descriptions and code signals.
-            </p>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col">
-              <span className="text-xs uppercase text-muted-foreground">
-                Overall score
-              </span>
-              <span className="text-3xl font-semibold">{overallScore}/100</span>
-            </div>
-            {verification ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <IconRefresh size={16} />
-                Repos analyzed: {projectResults.length}
-              </div>
-            ) : null}
-          </div>
-
-          <ScrollArea className="flex-1 rounded-xl border bg-muted/30 p-4">
-            {!selectedResume ? (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyTitle>Select a resume</EmptyTitle>
-                  <EmptyDescription>
-                    Pick a resume on the left to view or run GitHub
-                    verification.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : verificationQuery.isFetching && !verification ? (
-              <div className="text-sm text-muted-foreground">
-                Loading verification...
-              </div>
-            ) : verification ? (
-              <div className="space-y-4">
-                {projectResults.length === 0 ? (
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyTitle>No projects matched</EmptyTitle>
-                      <EmptyDescription>
-                        We couldn&apos;t find matching repos for the resume
-                        projects. Run verification again if you have new repos.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                ) : (
-                  projectResults.map((project) => (
-                    <ProjectCard key={project.projectTitle} project={project} />
-                  ))
-                )}
-              </div>
-            ) : (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyTitle>No verification yet</EmptyTitle>
-                  <EmptyDescription>
-                    Run a GitHub verification to see matches and scores.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            )}
-          </ScrollArea>
-        </section>
+            <ScrollArea className="flex-1 rounded-xl border h-[calc(100vh_-_200px)]  p-4 overflow-hidden">
+              {!selectedResume ? (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>Select a resume</EmptyTitle>
+                    <EmptyDescription>
+                      Pick a resume on the left to view or run GitHub
+                      verification.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : verificationQuery.isFetching && !verification ? (
+                <div className="text-sm text-muted-foreground">
+                  Loading verification...
+                </div>
+              ) : verification ? (
+                <div className="space-y-4">
+                  {projectResults.length === 0 ? (
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyTitle>No projects matched</EmptyTitle>
+                        <EmptyDescription>
+                          We couldn&apos;t find matching repos for the resume
+                          projects. Run verification again if you have new
+                          repos.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  ) : (
+                    projectResults.map((project) => (
+                      <ProjectCard
+                        key={project.projectTitle}
+                        project={project}
+                      />
+                    ))
+                  )}
+                </div>
+              ) : (
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyTitle>No verification yet</EmptyTitle>
+                    <EmptyDescription>
+                      Run a GitHub verification to see matches and scores.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            </ScrollArea>
+          </section>
+        </div>
       </div>
     </div>
   );
@@ -250,11 +266,13 @@ function ProjectCard({ project }: { project: GithubProjectVerificationDTO }) {
         : "Not found";
 
   return (
-    <div className="bg-white border rounded-xl p-4 space-y-3 shadow-sm">
+    <div className="bg-white dark:bg-background border rounded-xl p-4 space-y-3 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">{project.projectTitle}</h3>
+            <h3 className="text-lg font-semibold dark:text-white">
+              {project.projectTitle}
+            </h3>
             <Badge variant={statusVariant}>{statusLabel}</Badge>
           </div>
           {project.repoName ? (

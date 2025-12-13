@@ -19,6 +19,7 @@ import {
 import { AppError, asyncHandler } from "../middleware/error.middleware";
 import { isValidMongoId, transformLinkedInProfileForDB } from "../lib";
 import { logger } from "../utils/logger";
+import config from "../config/env";
 
 export const verifyResumeWithLinkedIn = asyncHandler(
   async (
@@ -94,83 +95,123 @@ export const verifyResumeWithLinkedIn = asyncHandler(
 );
 
 export const verifyResumeWithGithub = asyncHandler(
-  async (
-    req: Request,
-    res: Response<GithubVerificationResponse>,
-    next: NextFunction
-  ) => {
-    const resumeId = req.body.resumeId;
-    const providedGithubUrl = (req.body.githubProfileUrl as string) ?? "";
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { resumeId, githubProfileUrl: providedUrl } = req.body;
     const userId = req.user?._id;
 
+    // 1. Basic Validation
     if (!userId) return next(new AppError(401, "User not found"));
-
     if (!resumeId || !isValidMongoId(resumeId)) {
       return next(new AppError(400, "A valid resumeId is required"));
     }
 
-    const resume = await Resume.findOne({ _id: resumeId, owner: userId });
+    // 2. Fetch Resume (Read-only optimization with .lean())
+    const resume = await Resume.findOne({
+      _id: resumeId,
+      owner: userId,
+    }).lean();
+
     if (!resume) {
-      return next(new AppError(404, "Resume not found for this user"));
+      return next(new AppError(404, "Resume not found"));
     }
 
-    const githubProfileUrl =
-      providedGithubUrl.trim() ||
-      resume.profiles?.github ||
-      (resume.links || []).find(
-        (link) =>
-          typeof link === "string" && link.toLowerCase().includes("github.com")
-      ) ||
-      "";
+    // 3. Resolve GitHub URL (Priority: Body -> Resume Profile -> Resume Links)
+    let targetGithubUrl = providedUrl?.trim();
 
-    if (!githubProfileUrl) {
+    if (!targetGithubUrl) {
+      // Check resume.profiles object
+      if (resume.profiles?.github) {
+        targetGithubUrl = resume.profiles.github;
+      }
+      // Fallback: Search inside links array
+      else if (Array.isArray(resume.links)) {
+        const githubLink = resume.links.find(
+          (link) =>
+            typeof link === "string" &&
+            link.toLowerCase().includes("github.com")
+        );
+        if (githubLink) targetGithubUrl = githubLink;
+      }
+    }
+
+    if (!targetGithubUrl) {
       return next(
-        new AppError(
-          400,
-          "GitHub profile link is required on the resume or request body"
-        )
+        new AppError(400, "No GitHub profile URL found in request or resume.")
       );
     }
 
-    const firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
-    if (!firecrawlApiKey) {
-      return next(new AppError(500, "FIRECRAWL_API_KEY is not configured"));
+    // 4. CACHE CHECK: Check if we verified this recently (e.g., last 24 hours)
+    // This prevents abuse and saves Firecrawl credits.
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const cachedVerification = await GithubVerification.findOne({
+      resume: resumeId,
+      githubProfileUrl: targetGithubUrl, // Ensure it matches the requested URL
+      status: "COMPLETED",
+      createdAt: { $gt: oneDayAgo }, // Only fresh results
+    }).lean();
+
+    if (cachedVerification) {
+      logger.info(
+        `[GithubVerify] Returning cached result for resume ${resumeId}`
+      );
+      return res.status(200).json({
+        success: true,
+        data: cachedVerification,
+        message: "Retrieved from cache",
+      });
     }
 
+    // 5. Config Check
+    const firecrawlApiKey = config.firecrawlApiKey;
+    if (!firecrawlApiKey) {
+      return next(
+        new AppError(500, "Server configuration error: Missing API Key")
+      );
+    }
+
+    // 6. Run the Agent (This takes time)
+    // Note: If this takes > 60s, you might need a background job queue (BullMQ).
     try {
-      const verificationResult = await runResumeGithubVerification({
-        resume: resume.toObject() as any,
-        githubProfileUrl,
+      const result = await runResumeGithubVerification({
+        resume: resume as any, // Cast because lean() returns POJO
+        githubProfileUrl: targetGithubUrl,
         firecrawlApiKey,
       });
 
+      // 7. Save Result
       const verificationDoc = await GithubVerification.create({
         owner: userId,
-        resume: resume._id,
-        githubProfileUrl: verificationResult.githubProfileUrl,
-        profileMarkdown: verificationResult.profileMarkdown,
-        projectResults: verificationResult.projectResults,
+        resume: resumeId,
+        githubProfileUrl: result.githubProfileUrl,
+        profileMarkdown: result.profileMarkdown, // Consider removing this if DB space is tight
+        projectResults: result.projectResults,
         status: "COMPLETED",
-        overallScore: verificationResult.overallScore,
-        runMetadata: verificationResult.runMetadata,
+        overallScore: result.overallScore,
+        runMetadata: result.runMetadata,
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
-        data: verificationDoc.toObject() as any,
+        data: verificationDoc,
       });
     } catch (error) {
-      logger.error(error, "GitHub verification failed");
+      logger.error(error, `[GithubVerify] Failed for resume ${resumeId}`);
+
+      // Save a "FAILED" record so we know it broke
+      await GithubVerification.create({
+        owner: userId,
+        resume: resumeId,
+        githubProfileUrl: targetGithubUrl,
+        status: "FAILED",
+        runMetadata: { error: (error as Error).message },
+      });
+
       return next(
-        new AppError(
-          500,
-          (error as Error)?.message ?? "Unable to verify GitHub projects"
-        )
+        new AppError(502, `Verification failed: ${(error as Error).message}`)
       );
     }
   }
 );
-
 export const getResumeVerifications = asyncHandler(
   async (
     req: Request,

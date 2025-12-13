@@ -21,7 +21,7 @@ const linkedinExperienceSchema = new Schema(
         (vals || []).map((v) => v.trim()).filter(Boolean),
     },
   },
-  { _id: true },
+  { _id: true }
 );
 
 const linkedinEducationSchema = new Schema(
@@ -32,7 +32,7 @@ const linkedinEducationSchema = new Schema(
     graduationAt: { type: Date },
     description: { type: String, trim: true, default: "", maxlength: 2000 },
   },
-  { _id: true },
+  { _id: true }
 );
 
 const linkedinCertificationSchema = new Schema(
@@ -43,7 +43,7 @@ const linkedinCertificationSchema = new Schema(
     expiryDate: { type: Date },
     credentialUrl: { type: String, trim: true, default: "", maxlength: 500 },
   },
-  { _id: true },
+  { _id: true }
 );
 
 const linkedinProfileSchema = new Schema(
@@ -101,9 +101,10 @@ const linkedinProfileSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
+    collection: "linkedin_profiles",
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  },
+  }
 );
 
 linkedinProfileSchema.index({ resume: 1, owner: 1 }, { unique: false });

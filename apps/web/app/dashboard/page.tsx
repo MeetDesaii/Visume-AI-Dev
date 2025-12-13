@@ -47,12 +47,12 @@ export default function DashboardPage() {
   }
   return (
     <ScrollArea className="h-[calc(100vh_-_90px)]">
-      <div className="py-12 bg-white  rounded-2xl ">
+      <div className="py-12 bg-white dark:bg-accent dark:bg-accent  rounded-2xl ">
         <div className="container mx-auto max-w-7xl">
           <h3 className="text-2xl">Recent Resumes</h3>
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link href="/initial">
-              <div className="bg-white border p-4 rounded-2xl min-h-40 flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
+              <div className="bg-white dark:bg-accent dark:bg-accent  border p-4 rounded-2xl min-h-40 flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
                 <div className="bg-primary/10 rounded-full size-15 grid place-content-center">
                   <IconPlus className="text-primary" />
                 </div>
@@ -65,13 +65,13 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-      <div className="py-12 bg-white  rounded-2xl mt-3">
+      <div className="py-12 bg-white dark:bg-accent  rounded-2xl mt-3">
         <div className="container mx-auto max-w-7xl">
           <h3 className="text-2xl">Recent verifications</h3>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Link href="/dashboard/verified-resumes/verify-new">
-              <div className="bg-white border p-4 rounded-2xl h-full flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
+              <div className="bg-white dark:bg-accent border p-4 rounded-2xl h-full flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
                 <div className="bg-primary/10 rounded-full size-15 grid place-content-center">
                   <IconPlus className="text-primary" />
                 </div>

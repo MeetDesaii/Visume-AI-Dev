@@ -23,7 +23,7 @@ export const extractResumeInfo = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeExtractionResponse>,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     const resume = req.file;
     // const { jobId } = req.body;
@@ -42,11 +42,11 @@ export const extractResumeInfo = asyncHandler(
 
     const data = await extractTextFromBuffer(
       resume.originalname,
-      resume.buffer,
+      resume.buffer
     );
     if (!data.success) {
       return next(
-        new AppError(400, "Error when extracting content from the file!"),
+        new AppError(400, "Error when extracting content from the file!")
       );
     }
 
@@ -97,14 +97,14 @@ export const extractResumeInfo = asyncHandler(
     } else {
       return next(new AppError(400, validated.error.message));
     }
-  },
+  }
 );
 
 export const getAllResumes = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeListResponse>,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     const userId = req.user?._id;
 
@@ -115,7 +115,7 @@ export const getAllResumes = asyncHandler(
       owner: userId,
     })
       .select(
-        "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata createdAt updatedAt",
+        "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata createdAt updatedAt"
       )
       .lean({ virtuals: true });
 
@@ -127,14 +127,14 @@ export const getAllResumes = asyncHandler(
         resumes: resumes as any[],
       },
     });
-  },
+  }
 );
 
 export const getResume = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeDetailResponse>,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     const resumeId = req.params.resumeId;
     const userId = req.user?._id;
@@ -148,7 +148,9 @@ export const getResume = asyncHandler(
       .populate("job")
       .lean({ virtuals: true });
 
-    if (!resume) return next(new AppError(400, "Resume not found."));
+    console.log("🚀 ~ resume:", resume);
+
+    if (!resume) return next(new AppError(404, "Resume not found."));
 
     res.status(200).json({
       success: true,
@@ -156,14 +158,14 @@ export const getResume = asyncHandler(
         resume: resume as any,
       },
     });
-  },
+  }
 );
 
 export const tailorResume = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeTailorResponse>,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     const { resumeId } = req.params;
     const userId = req.user?._id;
@@ -172,7 +174,7 @@ export const tailorResume = asyncHandler(
     if (!userId) return next(new AppError(401, "User not found resumeId"));
     if (!isValidMongoId(resumeId))
       return next(
-        new AppError(400, "Provided resumeId is not a valid mongodb ID"),
+        new AppError(400, "Provided resumeId is not a valid mongodb ID")
       );
 
     const startTime = new Date();
@@ -202,8 +204,8 @@ export const tailorResume = asyncHandler(
       return next(
         new AppError(
           400,
-          "The return data is not structed as needed! Try again",
-        ),
+          "The return data is not structed as needed! Try again"
+        )
       );
 
     const suggestionDocs = await Suggestion.insertMany(
@@ -221,7 +223,7 @@ export const tailorResume = asyncHandler(
         documentPath: s.documentPath,
         sectionName: s.sectionName,
         acceptanceStatus: s.acceptanceStatus || "PENDING",
-      })),
+      }))
     );
 
     const finishTime = new Date();
@@ -239,25 +241,23 @@ export const tailorResume = asyncHandler(
         review: completedReview.toObject() as any,
       },
     });
-  },
+  }
 );
 
 export const getResumeReview = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeReviewLookupResponse>,
-    next: NextFunction,
+    next: NextFunction
   ) => {
     const { resumeId } = req.params;
-    console.log("🚀 ~ resumeId:", resumeId);
     const userId = req.user?._id;
-    console.log("🚀 ~ userId:", userId);
 
     if (!resumeId) return next(new AppError(400, "Provide a resumeId"));
     if (!userId) return next(new AppError(401, "User not found resumeId"));
     if (!isValidMongoId(resumeId))
       return next(
-        new AppError(400, "Provided resumeId is not a valid mongodb ID"),
+        new AppError(400, "Provided resumeId is not a valid mongodb ID")
       );
 
     const resumeReview = await ResumeReview.findOne({
@@ -265,20 +265,14 @@ export const getResumeReview = asyncHandler(
       owner: userId,
     }).populate("suggestions");
 
-    if (!resumeReview) {
-      res.status(200).json({
-        success: true,
-        data: {
-          review: null,
-        },
-      });
-    } else {
-      res.status(200).json({
-        success: true,
-        data: {
-          review: resumeReview.toObject() as any,
-        },
-      });
-    }
-  },
+    if (!resumeReview)
+      return next(new AppError(404, "Resume review not found."));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        review: resumeReview.toObject() as any,
+      },
+    });
+  }
 );

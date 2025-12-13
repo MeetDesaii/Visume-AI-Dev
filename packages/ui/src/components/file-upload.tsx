@@ -74,7 +74,7 @@ function FileUpload({
         });
       }, 150);
     },
-    [onFileChange],
+    [onFileChange]
   );
 
   // Handle accepted files
@@ -85,7 +85,7 @@ function FileUpload({
         simulateUpload(file);
       }
     },
-    [simulateUpload],
+    [simulateUpload]
   );
 
   // Handle rejected files
@@ -168,10 +168,10 @@ function FileUpload({
         <div
           {...getRootProps()}
           className={cn(
-            "flex justify-center rounded-xl bg-white dark:bg-accent  border-2 mt-2 border-dashed px-6 py-12 transition-colors cursor-pointer",
+            "flex justify-center rounded-xl bg-white dark:bg-accent dark:bg-accent  border-2 mt-2 border-dashed px-6 py-12 transition-colors cursor-pointer",
             isDragActive && !isDragReject && "border-primary bg-primary/5",
             isDragReject && "border-destructive bg-destructive/5",
-            !isDragActive && "border-input hover:border-primary/50",
+            !isDragActive && "border-input hover:border-primary/50"
           )}
         >
           <input {...getInputProps()} aria-label="File upload" />
@@ -181,7 +181,7 @@ function FileUpload({
                 "mx-auto size-10 mb-3 transition-colors",
                 isDragActive && !isDragReject && "text-primary",
                 isDragReject && "text-destructive",
-                !isDragActive && "text-muted-foreground",
+                !isDragActive && "text-muted-foreground"
               )}
               aria-hidden={true}
             />
@@ -190,7 +190,7 @@ function FileUpload({
                 <p
                   className={cn(
                     "font-medium",
-                    isDragReject ? "text-destructive" : "text-primary",
+                    isDragReject ? "text-destructive" : "text-primary"
                   )}
                 >
                   {isDragReject ? "Invalid file type" : "Drop file here"}
@@ -216,7 +216,7 @@ function FileUpload({
         </p>
 
         {file && (
-          <Card className="relative mt-8 bg-white dark:bg-accent p-4 gap-4">
+          <Card className="relative mt-8 bg-white dark:bg-accent dark:bg-accent p-4 gap-4">
             <Button
               type="button"
               variant="ghost"

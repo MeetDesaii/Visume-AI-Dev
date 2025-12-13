@@ -21,7 +21,7 @@ import { InitialSetupDetails, SetupProgress } from "@/app/initial/page";
 export const formSchema = z.object({
   title: z.string().min(2).max(50),
   company: z.string().min(2).max(50),
-  description: z.string().min(30).max(1000),
+  description: z.string().min(30).max(5000),
 });
 
 export default function JobForm({

@@ -42,7 +42,7 @@ export default function VerifyResumeList({
             />
           ))}
 
-          <div className="bg-white border p-4 rounded-2xl min-h-40 flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
+          <div className="bg-white dark:bg-accent border p-4 rounded-2xl min-h-40 flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
             <div className="bg-primary/10 rounded-full size-15 grid place-content-center">
               <IconPlus className="text-primary" />
             </div>

@@ -33,7 +33,7 @@ const projectResultSchema = new Schema(
     },
     alignmentScore: { type: Number, min: 0, max: 100, default: 0 },
   },
-  { _id: true },
+  { _id: true }
 );
 
 const githubVerificationSchema = new Schema(
@@ -71,14 +71,15 @@ const githubVerificationSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
+    collection: "github_verifications",
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  },
+  }
 );
 
 githubVerificationSchema.index(
   { resume: 1, githubProfileUrl: 1 },
-  { unique: false },
+  { unique: false }
 );
 
 export type GithubVerificationDoc = InferSchemaType<
@@ -90,5 +91,5 @@ export const GithubVerification: GithubVerificationModel =
   mongoose.models.GithubVerification ||
   mongoose.model<GithubVerificationDoc>(
     "GithubVerification",
-    githubVerificationSchema,
+    githubVerificationSchema
   );

@@ -37,7 +37,7 @@ export default function VerifyNewPage() {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        },
+        }
       );
 
       return res.data;
@@ -77,13 +77,13 @@ export default function VerifyNewPage() {
         className={` ${isPending ? "blur-lg pointer-events-none" : ""} transition-all duration-700 ease-in `}
       >
         <div className="grid grid-cols-2 gap-3">
-          <section className="bg-white rounded-2xl h-[calc(100vh_-_90px)]">
+          <section className="bg-white dark:bg-accent rounded-2xl h-[calc(100vh_-_90px)]">
             <VerifyResumeList
               selectedResumeId={selectedResume?._id}
               onSelect={(resume) => setSelectedResume(resume)}
             />
           </section>
-          <section className="bg-white rounded-2xl h-[calc(100vh_-_90px)]">
+          <section className="bg-white dark:bg-accent rounded-2xl h-[calc(100vh_-_90px)]">
             <VerifyLinkdinProfilePDFList
               selectedFile={linkedinFile}
               onFileSelected={(file, uploading) => {
@@ -94,7 +94,7 @@ export default function VerifyNewPage() {
           </section>
         </div>
 
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 mb-4 h-23 min-w-[400px] transition-all rounded-2xl flex items-center justify-between gap-5 p-6 bg-white drop-shadow-2xl border">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 mb-4 h-23 min-w-[400px] transition-all rounded-2xl flex items-center justify-between gap-5 p-6 bg-white dark:bg-accent drop-shadow-2xl border">
           <div className="text-sm text-muted-foreground space-y-1">
             <p>
               Resume:{" "}

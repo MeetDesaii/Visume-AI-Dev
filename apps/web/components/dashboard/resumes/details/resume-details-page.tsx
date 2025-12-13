@@ -24,7 +24,7 @@ export default function ResumeDetailsPage({ id }: { id: string }) {
     queryKey: ["review", id],
     queryFn: async () => {
       const res = await api.get<ResumeReviewLookupResponse>(
-        `/resumes/${id}/tailor`,
+        `/resumes/${id}/tailor`
       );
       return res.data;
     },
@@ -34,30 +34,22 @@ export default function ResumeDetailsPage({ id }: { id: string }) {
     return <div className="p-8">Loading...</div>;
   }
 
-  if (resumeQuery.isError || reviewQuery.isError) {
-    return (
-      <div className="p-8">
-        Error: {resumeQuery.error?.message || reviewQuery.error?.message}
-      </div>
-    );
-  }
-
   const resume = resumeQuery.data?.data?.resume;
   const review = reviewQuery.data?.data?.review;
 
-  if (!resume || !review) {
+  if (!resume) {
     return <div className="p-8">No data available</div>;
   }
 
   return (
     <div className="grid grid-cols-[0.5fr_1fr_0.6fr] gap-3">
-      <div className="bg-white rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
-        <ResumeContent resume={resume} review={review} />
+      <div className="bg-white dark:bg-accent rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
+        <ResumeContent resume={resume} />
       </div>
-      <div className="bg-white rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
+      <div className="bg-white dark:bg-accent rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
         <ResumeView resume={resume} />
       </div>
-      <div className="bg-white rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
+      <div className="bg-white dark:bg-accent rounded-2xl h-[calc(100vh_-_90px)] overflow-hidden">
         <ResumeSuggestionsList review={review} resume={resume} />
       </div>
     </div>

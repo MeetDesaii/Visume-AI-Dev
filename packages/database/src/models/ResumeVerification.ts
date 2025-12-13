@@ -50,6 +50,7 @@ const resumeVerificationSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
+    collations: "resume_verifications",
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }

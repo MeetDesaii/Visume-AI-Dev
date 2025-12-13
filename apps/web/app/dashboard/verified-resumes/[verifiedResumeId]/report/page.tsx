@@ -49,10 +49,10 @@ export default async function ResumeDetails({ params }: Props) {
   return (
     <div className="grid grid-cols-[1fr_0.9fr] gap-3">
       <ScrollArea className="h-[calc(100vh_-_90px)] ">
-        <div className="bg-white rounded-xl  p-4 mb-3 flex flex-col md:flex-row justify-between items-start md:items-center ">
+        <div className="bg-white dark:bg-accent rounded-xl  p-4 mb-3 flex flex-col md:flex-row justify-between items-start md:items-center ">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold ">
                 {resume.firstName} {resume.lastName}
               </h1>
               <span className="px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full border border-green-200">
@@ -65,11 +65,11 @@ export default async function ResumeDetails({ params }: Props) {
           <div className="flex items-center gap-3 mt-3 md:mt-0">
             <div className="text-right">
               <div className="text-sm text-gray-500">Overall Match</div>
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold ">
                 {verification.overallScore}/100
               </div>
             </div>
-            <div className="w-16 h-16 rounded-full border-4 border-gray-100 flex items-center justify-center bg-white shadow-inner">
+            <div className="w-16 h-16 rounded-full border-4 border-gray-100 flex items-center justify-center bg-white dark:bg-accent shadow-inner">
               <div
                 className={`w-3 h-3 rounded-full ${getScoreColor(verification.overallScore)}`}
               ></div>
@@ -81,16 +81,16 @@ export default async function ResumeDetails({ params }: Props) {
           {/* LEFT COLUMN: SCORES & FINDINGS */}
           <div className="lg:col-span-2 space-y-6">
             {/* Section Scores */}
-            <div className="bg-white rounded-xl  p-4">
+            <div className="bg-white dark:bg-accent rounded-xl  p-4">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <IconCircleCheckFilled className="w-5 h-5 text-blue-600" />
+                <IconCircleCheckFilled className="w-5 h-5 text-primary" />
                 Match Breakdown
               </h2>
               <div className="space-y-4">
                 {verification.sectionScores.map((item, index) => (
                   <div key={index}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="capitalize font-medium text-gray-700">
+                      <span className="capitalize font-medium text-gray-700 dark:text-neutral-200 ">
                         {item.section}
                       </span>
                       <span className="font-bold">{item.score}%</span>
@@ -115,32 +115,32 @@ export default async function ResumeDetails({ params }: Props) {
           {/* RIGHT COLUMN: RESUME CONTENT */}
           <div className="lg:col-span-1 space-y-3">
             {/* Candidate Info Card */}
-            <div className="bg-white rounded-xl  p-4">
+            <div className="bg-white dark:bg-accent rounded-xl  p-4">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <IconUser className="w-5 h-5 text-blue-600" />
+                <IconUser className="w-5 h-5 text-primary" />
                 Resume Contact Info
               </h2>
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-background rounded-lg">
                   <IconMail className="w-5 h-5 text-gray-400" />
                   <span className="text-sm font-medium">{resume.email}</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-background rounded-lg">
                   <IconPhone className="w-5 h-5 text-gray-400" />
                   <span className="text-sm font-medium">
                     {resume.phoneNumber}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg md:col-span-2">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-background rounded-lg md:col-span-2">
                   <IconMapPin className="w-5 h-5 text-gray-400" />
                   <span className="text-sm font-medium">{resume.location}</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl   p-4 lg:col-span-1">
+            <div className="bg-white dark:bg-accent rounded-2xl   p-4 lg:col-span-1">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <IconCode className="w-5 h-5 text-blue-600" />
+                <IconCode className="w-5 h-5 text-primary" />
                 Top Skills
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -154,25 +154,24 @@ export default async function ResumeDetails({ params }: Props) {
           </div>
 
           {/* Work Experience */}
-          <div className="bg-white rounded-xl lg:col-span-3  p-4">
+          <div className="bg-white dark:bg-accent rounded-xl lg:col-span-3  p-4">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <IconBriefcase className="w-5 h-5 text-blue-600" />
+              <IconBriefcase className="w-5 h-5 text-primary" />
               Work Experience
             </h2>
-            <div className="space-y-6 relative border-l-2 border-gray-100 ml-3 pl-6 pb-2">
+            <div className="space-y-6 relative border-l-2  ml-3 pl-6 pb-2">
               {resume.workExperiences.map((job, idx) => (
                 <div key={idx} className="relative">
-                  <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-blue-100 border-2 border-blue-500"></div>
-                  <h3 className="font-bold text-gray-900">{job.jobTitle}</h3>
-                  <div className="text-sm text-gray-600 font-medium">
+                  <div className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-primary border-2 "></div>
+                  <h3 className="font-bold ">{job.jobTitle}</h3>
+                  <div className="text-sm text-gray-600 dark:text-neutral-500 font-medium">
                     {job.employerName} | {job.location}
                   </div>
-                  <div className="text-xs text-gray-400 mb-2">
-                    {job.startedAt} - {job.endedAt}
+                  <div className="text-xs text-gray-400  mb-2">
                     {job.startedAt && format(job.startedAt, "MMM yy")} -
                     {job.endedAt ? format(job.endedAt, "MMM yy") : "Now"}
                   </div>
-                  <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                  <ul className="list-disc list-inside text-sm text-gray-600 dark:text-neutral-500 space-y-1">
                     {job.achievements.slice(0, 2).map((ach, i) => (
                       <li key={i} className="truncate">
                         {ach.text}
@@ -188,18 +187,18 @@ export default async function ResumeDetails({ params }: Props) {
           {/* Skills */}
 
           {/* Education */}
-          <div className="bg-white rounded-xl  p-4 lg:col-span-3">
+          <div className="bg-white dark:bg-accent rounded-xl  p-4 lg:col-span-3">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-blue-600" />
+              <GraduationCap className="w-5 h-5 text-primary" />
               Education
             </h2>
             <div className="space-y-4">
               {resume.educations.map((edu, idx) => (
                 <div
                   key={idx}
-                  className="pb-3 border-b border-gray-100 last:border-0"
+                  className="pb-3 border-b border-gray-100 dark:border-gray-600 last:border-0"
                 >
-                  <div className="font-bold text-sm text-gray-900">
+                  <div className="font-bold text-sm ">
                     {edu.institutionName}
                   </div>
                   <div className="text-xs text-gray-600">
@@ -216,14 +215,14 @@ export default async function ResumeDetails({ params }: Props) {
         </div>
       </ScrollArea>
 
-      <ScrollArea className="h-[calc(100vh_-_90px)] bg-white rounded-2xl">
+      <ScrollArea className="h-[calc(100vh_-_90px)] bg-white dark:bg-accent rounded-2xl">
         <div className="border-b px-4 py-3">
           <h2 className="text-lg font-semibold  flex items-center gap-2">
             <IconAlertTriangle className="w-5 h-5 text-orange-500" />
             Analysis Findings
           </h2>
         </div>
-        <div className="bg-white rounded-xl  p-4 markdown-content">
+        <div className="bg-white dark:bg-accent rounded-xl  p-4 markdown-content">
           {verification.findings && (
             <Markdown
               remarkPlugins={[remarkGfm, remarkBreaks]}
