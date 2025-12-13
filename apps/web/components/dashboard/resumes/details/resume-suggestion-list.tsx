@@ -22,13 +22,12 @@ export default function ResumeSuggestionsList({
   review,
   resume,
 }: {
-  review: ResumeReview;
+  review?: ResumeReview | null;
   resume: ResumeWithOutJob;
 }) {
-  console.log("🚀 ~ ResumeSuggestionsList ~ review:", review);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
 
-  if (Object.keys(review).length === 0)
+  if (!review || Object.keys(review).length === 0)
     return (
       <div className="grid place-content-center ">
         <Empty>
@@ -42,7 +41,7 @@ export default function ResumeSuggestionsList({
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <TailorResume resume={resume} review={review} />
+            <TailorResume resume={resume} />
           </EmptyContent>
         </Empty>
       </div>

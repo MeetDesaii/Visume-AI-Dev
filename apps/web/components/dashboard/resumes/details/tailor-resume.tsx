@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@visume/ui/components/button";
 import { Loader2, Sparkles } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -12,22 +12,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@visume/ui/components/dialog";
+<<<<<<< Updated upstream
 import { ResumeReview } from "@visume/types/models/resume-review";
+=======
+>>>>>>> Stashed changes
 import { ResumeTailorResponse, ResumeWithOutJob } from "@visume/types";
 import { Label } from "@visume/ui/components/label";
 import { useMutation } from "@tanstack/react-query";
 import { useApiClient } from "@/hooks/use-api-client";
 import { useTimer } from "@/hooks/use-timer";
-import { fmtRef } from "@/lib/inedx";
 
-export default function TailorResume({
-  review,
-  resume,
-}: {
-  review: ResumeReview;
-  resume: ResumeWithOutJob;
-}) {
-  const { elapsedMs, isRunning, start, pause, reset } = useTimer();
+export default function TailorResume({ resume }: { resume: ResumeWithOutJob }) {
+  const { start, pause } = useTimer();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const api = useApiClient();
@@ -50,7 +46,7 @@ export default function TailorResume({
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="lg">
           <Sparkles />
           Tailor Resume
         </Button>
@@ -84,13 +80,10 @@ export default function TailorResume({
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline" size="sm">
-                  Cancel
-                </Button>
+                <Button variant="outline">Cancel</Button>
               </DialogClose>
               <Button
                 variant="default"
-                size="sm"
                 onClick={() => {
                   start();
                   mutate(resume._id);

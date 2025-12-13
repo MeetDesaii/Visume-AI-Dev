@@ -150,8 +150,13 @@ export function RegisterForm({
   return (
     <div
       className={cn(
+<<<<<<< Updated upstream
         "flex flex-col gap-6 bg-white dark:bg-black rounded-2xl p-6 drop-shadow-2xl",
         className,
+=======
+        "flex flex-col gap-6 bg-white dark:bg-accent dark:bg-black rounded-2xl p-6 drop-shadow-2xl",
+        className
+>>>>>>> Stashed changes
       )}
       {...props}
     >

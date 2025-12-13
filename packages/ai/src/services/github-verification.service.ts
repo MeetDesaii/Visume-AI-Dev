@@ -8,9 +8,12 @@ import {
   StateGraph,
 } from "@langchain/langgraph";
 import { z } from "zod";
+// Corrected import path spelling if needed, assuming user path is fixed or kept as is
 import { structuredExtract, type LLMRuntimeOptions } from "../langchian.config";
 import { type ResumeExtraction } from "../schema";
 import { type NormalizedResume } from "./verification.service";
+
+// --- Types & Schemas ---
 
 type NormalizedProject = {
   title: string;
@@ -46,6 +49,8 @@ export type GithubVerificationAgentResult = {
   overallScore: number;
   runMetadata?: Record<string, unknown>;
 };
+
+// --- Zod Schemas ---
 
 const RepoListSchema = z.object({
   repos: z
@@ -100,6 +105,8 @@ const ProjectVerificationSchema = z.object({
   reasoning: z.string().trim().default(""),
 });
 
+// --- State Definition ---
+
 type GraphState = {
   resume: NormalizedResumeWithProjects;
   githubProfileUrl: string;
@@ -110,32 +117,49 @@ type GraphState = {
   projectResults: GithubProjectVerification[];
 };
 
-function truncate(text: string, max = 12000): string {
-  return text.length > max ? `${text.slice(0, max)}...` : text;
-}
+// --- Helper Functions ---
 
+function truncate(text: string, max = 15000): string {
+  return text.length > max ? `${text.slice(0, max)}... [TRUNCATED]` : text;
+}
+function normalizeGithubProfileUrl(raw: string): {
+  profileUrl: string;
+  username: string;
+} {
+  const input = (raw ?? "").trim();
+  if (!input) throw new Error("GitHub profile URL is required");
+
+<<<<<<< Updated upstream
 function normalizeGithubProfileUrl(raw: string): {
   profileUrl: string;
   username: string;
 } {
   const trimmed = (raw ?? "").trim();
   if (!trimmed) throw new Error("GitHub profile URL is required");
+=======
+  // 1. Remove protocol and 'www' (e.g. "https://www.github.com/..." -> "github.com/...")
+  let clean = input.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "");
+>>>>>>> Stashed changes
 
-  let url = trimmed;
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://github.com/${url.replace(/^@/, "")}`;
-  }
+  // 2. Remove the domain "github.com/" if it exists at the start
+  // (e.g. "github.com/meetdesaii" -> "meetdesaii")
+  clean = clean.replace(/^github\.com\//i, "");
 
-  const parsed = new URL(url);
-  const segments = parsed.pathname.split("/").filter(Boolean);
+  // 3. Remove any leading "@" symbol (e.g. "@meetdesaii" -> "meetdesaii")
+  clean = clean.replace(/^@/, "");
+
+  // 4. Handle extra paths (e.g. "meetdesaii/repositories" -> "meetdesaii")
+  // We split by slash and take the first segment.
+  const segments = clean.split("/").filter(Boolean);
   const username = segments[0];
 
   if (!username) {
-    throw new Error("Unable to derive GitHub username from profile URL");
+    throw new Error(`Could not parse GitHub username from: ${raw}`);
   }
 
+  // 5. Rebuild the URL cleanly
   return {
-    profileUrl: `https://github.com/${username}`,
+    profileUrl: `https://github.com/${username}?tab=repositories`,
     username,
   };
 }
@@ -143,9 +167,13 @@ function normalizeGithubProfileUrl(raw: string): {
 function normalizeResumeForGithub(
   resume: ResumeExtraction | NormalizedResumeWithProjects
 ): any {
+<<<<<<< Updated upstream
+=======
+  // Safe extraction with optional chaining to prevent crashes on partial data
+>>>>>>> Stashed changes
   const projects =
     (resume as any).projects?.map((project: any) => ({
-      title: project.title ?? "",
+      title: project.title ?? "Untitled Project",
       description: project.description ?? "",
       achievements: (project.achievements ?? [])
         .map((a: any) => a?.text ?? a ?? "")
@@ -155,6 +183,7 @@ function normalizeResumeForGithub(
         .filter(Boolean),
     })) ?? [];
 
+<<<<<<< Updated upstream
   return {
     firstName: (resume as any).firstName ?? "",
     lastName: (resume as any).lastName ?? "",
@@ -173,35 +202,38 @@ function normalizeResumeForGithub(
     certifications: (resume as any).certifications ?? [],
     projects,
   };
+=======
+  return { ...resume, projects };
+>>>>>>> Stashed changes
 }
 
 async function scrapeMarkdown(
   client: FirecrawlApp,
   url: string
+<<<<<<< Updated upstream
 ): Promise<{
   markdown: string;
   raw?: unknown;
 }> {
+=======
+): Promise<{ markdown: string; raw?: unknown }> {
+>>>>>>> Stashed changes
   try {
     const result = await client.scrapeUrl(url, {
       formats: ["markdown"],
-      onlyMainContent: false,
+      onlyMainContent: true,
     } as any);
 
-    const markdown =
-      (result as any)?.data?.markdown ??
-      (result as any)?.data?.content ??
-      (result as any)?.data?.text ??
-      "";
-
+    const markdown = (result as any)?.markdown ?? "";
     return { markdown, raw: result };
   } catch (error) {
-    return { markdown: "", raw: { error: (error as Error)?.message ?? error } };
+    console.warn(`[VerificationAgent] Scrape failed for ${url}:`, error);
+    return { markdown: "", raw: { error: (error as Error)?.message } };
   }
 }
 
 function buildRepoUrl(username: string, repoName?: string, fallback?: string) {
-  if (fallback) return fallback;
+  if (fallback && fallback.includes("github.com")) return fallback;
   if (!username || !repoName) return "";
   return `https://github.com/${username}/${repoName}`;
 }
@@ -213,6 +245,8 @@ function computeOverallScore(results: GithubProjectVerification[]) {
   return Math.round(total / scored.length);
 }
 
+// --- Main Graph Logic ---
+
 async function buildGraph(params: {
   firecrawl: FirecrawlApp;
   profileUrl: string;
@@ -221,19 +255,17 @@ async function buildGraph(params: {
 }) {
   const { firecrawl, profileUrl, username, llmOptions } = params;
 
-  const GraphState = Annotation.Root({
+  // Define Graph State
+  const GraphAnnotation = Annotation.Root({
     resume: Annotation<NormalizedResumeWithProjects>(),
     githubProfileUrl: Annotation<string>(),
-    profileMarkdown: Annotation<string>({
-      default: () => "",
-      reducer: (_, b) => b ?? "",
-    }),
+    profileMarkdown: Annotation<string>({ reducer: (_, b) => b ?? "" }),
     repos: Annotation<z.infer<typeof RepoListSchema>["repos"]>({
-      default: () => [],
       reducer: (_, b) => b ?? [],
     }),
     resumeProjects: Annotation<
       z.infer<typeof ResumeProjectsSchema>["projects"]
+<<<<<<< Updated upstream
     >({
       default: () => [],
       reducer: (_, b) => b ?? [],
@@ -244,47 +276,32 @@ async function buildGraph(params: {
       default: () => [],
       reducer: (_, b) => b ?? [],
     }),
+=======
+    >({ reducer: (_, b) => b ?? [] }),
+    mappings: Annotation<
+      z.infer<typeof ProjectRepoMappingSchema>["projectMappings"]
+    >({ reducer: (_, b) => b ?? [] }),
+>>>>>>> Stashed changes
     projectResults: Annotation<GithubProjectVerification[]>({
-      default: () => [],
       reducer: (_, b) => b ?? [],
     }),
   });
 
-  const scrapeProfileNode = async () => {
-    const profileScrape = await scrapeMarkdown(firecrawl, profileUrl);
-    return { profileMarkdown: profileScrape.markdown };
-  };
+  // --- Nodes ---
 
-  const extractReposNode = async (state: typeof GraphState.State) => {
-    const repos = await structuredExtract({
-      schema: RepoListSchema,
-      input: [
-        {
-          role: "system",
-          content:
-            "Extract the repositories from this GitHub profile page. Focus on repo names, URLs, descriptions, topics, stars, and forks. Only include repos that belong to this user.",
-        },
-        {
-          role: "user",
-          content: `GitHub profile URL: ${state.githubProfileUrl}\n\nProfile markdown:\n${truncate(
-            state.profileMarkdown,
-            12000
-          )}`,
-        },
-      ],
-      ...llmOptions,
-    });
-    return { repos: repos.repos };
-  };
+  const extractProjectsNode = async (state: typeof GraphAnnotation.State) => {
+    // Optimization: If projects are already normalized in the resume, skip LLM extraction
+    if (state.resume.projects && state.resume.projects.length > 0) {
+      return { resumeProjects: state.resume.projects };
+    }
 
-  const extractProjectsNode = async (state: typeof GraphState.State) => {
     const projects = await structuredExtract({
       schema: ResumeProjectsSchema,
       input: [
         {
           role: "system",
           content:
-            "Extract all projects from the resume JSON. Keep titles exact, and capture descriptions, achievements, and skills. Use empty strings/arrays when missing.",
+            "Extract technical projects from the resume. Capture titles, descriptions, and lists of achievements/skills.",
         },
         {
           role: "user",
@@ -296,23 +313,57 @@ async function buildGraph(params: {
     return { resumeProjects: projects.projects };
   };
 
-  const matchProjectsNode = async (state: typeof GraphState.State) => {
+  const scrapeProfileNode = async () => {
+    const profileScrape = await scrapeMarkdown(firecrawl, profileUrl);
+
+    if (!profileScrape.markdown) {
+      throw new Error(`Failed to scrape GitHub profile: ${profileUrl}`);
+    }
+    return { profileMarkdown: profileScrape.markdown };
+  };
+
+  const extractReposNode = async (state: typeof GraphAnnotation.State) => {
+    const repos = await structuredExtract({
+      schema: RepoListSchema,
+      input: [
+        {
+          role: "system",
+          content:
+            "Extract repositories strictly belonging to this user from the markdown. Ignore pinned repos if they belong to others (forks are okay).",
+        },
+        {
+          role: "user",
+          content: `Profile URL: ${state.githubProfileUrl}\nContent:\n${truncate(state.profileMarkdown)}`,
+        },
+      ],
+      ...llmOptions,
+    });
+    return { repos: repos.repos };
+  };
+
+  const matchProjectsNode = async (state: typeof GraphAnnotation.State) => {
+    // If we have no resume projects, we can't match anything.
+    if (state.resumeProjects.length === 0) return { mappings: [] };
+
     const mappings = await structuredExtract({
       schema: ProjectRepoMappingSchema,
       input: [
         {
           role: "system",
           content:
-            "Match each resume project to the most likely GitHub repository. Prefer repos owned by the profile. Use NOT_FOUND when no good match exists. Provide matchConfidence 0-1 and concise reasoning.",
+            "You are a code auditor. Match Resume Projects to GitHub Repositories. \n- Use fuzzy matching on names/topics.\n- If a match is weak, set status to NOT_FOUND.\n- Reasoning must be concise.",
         },
         {
           role: "user",
-          content: `GitHub profile: ${state.githubProfileUrl}\n\nAvailable repos:\n${JSON.stringify(
-            state.repos,
+          content: `Repos:\n${JSON.stringify(
+            state.repos.map((r) => ({ name: r.name, desc: r.description })),
             null,
             2
-          )}\n\nResume projects:\n${JSON.stringify(
-            state.resumeProjects,
+          )}\n\nProjects:\n${JSON.stringify(
+            state.resumeProjects.map((p) => ({
+              title: p.title,
+              desc: p.description,
+            })),
             null,
             2
           )}`,
@@ -323,11 +374,11 @@ async function buildGraph(params: {
     return { mappings: mappings.projectMappings };
   };
 
-  const verifyProjectsNode = async (state: typeof GraphState.State) => {
-    const projectResults: GithubProjectVerification[] = [];
-
-    for (const mapping of state.mappings) {
+  const verifyProjectsNode = async (state: typeof GraphAnnotation.State) => {
+    // PERFORMANCE UPGRADE: Process all matches in Parallel (Promise.all)
+    const verificationPromises = state.mappings.map(async (mapping) => {
       const repoUrl = buildRepoUrl(username, mapping.repoName, mapping.repoUrl);
+
       const baseResult: GithubProjectVerification = {
         projectTitle: mapping.projectTitle,
         repoName: mapping.repoName,
@@ -343,44 +394,43 @@ async function buildGraph(params: {
         alignmentScore: 0,
       };
 
-      if (baseResult.status !== "MATCHED") {
-        projectResults.push(baseResult);
-        continue;
-      }
+      // If not matched, return early
+      if (baseResult.status !== "MATCHED") return baseResult;
 
       try {
         const repoScrape = await scrapeMarkdown(firecrawl, repoUrl);
+
+        // If scrape fails (empty), mark as risk
+        if (!repoScrape.markdown) {
+          return {
+            ...baseResult,
+            riskFlags: ["Repository could not be scraped (Empty or Private)"],
+          };
+        }
+
         const verification = await structuredExtract({
           schema: ProjectVerificationSchema,
           input: [
             {
               role: "system",
               content:
-                "Compare the resume project with the repository content. Identify supported claims, missing claims, and risks. Provide a concise repo summary. alignmentScore is 0-100 for how well the repo supports the project. confidence is 0-1 for your assessment reliability.",
+                "Verify resume claims against code. \n- `alignmentScore` (0-100): Does the code prove the project exists and uses the claimed tech?\n- `riskFlags`: detect empty repos, forks without changes, or ancient timestamps.",
             },
             {
               role: "user",
-              content: `Repository URL: ${repoUrl}\n\nResume project:\n${JSON.stringify(
+              content: `Project Claim:\n${JSON.stringify(
                 state.resumeProjects.find(
                   (p) => p.title === mapping.projectTitle
-                ) ?? {
-                  title: mapping.projectTitle,
-                  description: "",
-                  achievements: [],
-                  skills: [],
-                },
+                ),
                 null,
                 2
-              )}\n\nRepository content (truncated):\n${truncate(
-                repoScrape.markdown,
-                9000
-              )}`,
+              )}\n\nRepo Readme/Code:\n${truncate(repoScrape.markdown, 10000)}`,
             },
           ],
           ...llmOptions,
         });
 
-        projectResults.push({
+        return {
           ...baseResult,
           status: "MATCHED",
           repoSummary: verification.repoSummary,
@@ -390,38 +440,43 @@ async function buildGraph(params: {
           alignmentScore: verification.alignmentScore,
           matchConfidence: Math.max(
             baseResult.matchConfidence,
-            verification.confidence ?? baseResult.matchConfidence
+            verification.confidence ?? 0.5
           ),
-          matchReasoning: baseResult.matchReasoning || verification.reasoning,
-        });
+        };
       } catch (error) {
-        projectResults.push({
+        return {
           ...baseResult,
           status: "FAILED",
-          riskFlags: [(error as Error)?.message ?? "Verification failed"],
-        });
+          riskFlags: [`Verification Error: ${(error as Error).message}`],
+        };
       }
-    }
+    });
 
-    return { projectResults };
+    const results = await Promise.all(verificationPromises);
+    return { projectResults: results };
   };
 
-  const workflow = new StateGraph(GraphState)
+  // --- Graph Construction ---
+
+  const workflow = new StateGraph(GraphAnnotation)
+    // 1. Add Nodes
+    .addNode("extractProjects", extractProjectsNode)
     .addNode("scrapeProfile", scrapeProfileNode)
     .addNode("extractRepos", extractReposNode)
-    .addNode("extractProjects", extractProjectsNode)
     .addNode("matchProjects", matchProjectsNode)
     .addNode("verifyProjects", verifyProjectsNode)
-    .addEdge(START, "scrapeProfile")
+    .addEdge(START, "extractProjects")
+    .addEdge("extractProjects", "scrapeProfile")
     .addEdge("scrapeProfile", "extractRepos")
-    .addEdge("extractRepos", "extractProjects")
-    .addEdge("extractProjects", "matchProjects")
+    .addEdge("extractRepos", "matchProjects")
     .addEdge("matchProjects", "verifyProjects")
     .addEdge("verifyProjects", END)
     .compile({ checkpointer: new MemorySaver() });
 
   return workflow;
 }
+
+// --- Main Entry Point ---
 
 export async function runResumeGithubVerification(params: {
   resume: ResumeExtraction | NormalizedResumeWithProjects;
@@ -430,9 +485,7 @@ export async function runResumeGithubVerification(params: {
   llmOptions?: LLMRuntimeOptions;
 }): Promise<GithubVerificationAgentResult> {
   const apiKey = params.firecrawlApiKey ?? process.env.FIRECRAWL_API_KEY;
-  if (!apiKey) {
-    throw new Error("FIRECRAWL_API_KEY is not configured");
-  }
+  if (!apiKey) throw new Error("FIRECRAWL_API_KEY is not configured");
 
   const normalizedResume = normalizeResumeForGithub(params.resume);
   const { profileUrl, username } = normalizeGithubProfileUrl(
@@ -440,6 +493,7 @@ export async function runResumeGithubVerification(params: {
   );
 
   const firecrawl = new FirecrawlApp({ apiKey });
+
   const graph = await buildGraph({
     firecrawl,
     profileUrl,
@@ -451,17 +505,8 @@ export async function runResumeGithubVerification(params: {
     {
       resume: normalizedResume,
       githubProfileUrl: profileUrl,
-      profileMarkdown: "",
-      repos: [],
-      resumeProjects: [],
-      mappings: [],
-      projectResults: [],
     },
-    {
-      configurable: {
-        thread_id: randomUUID(),
-      },
-    }
+    { configurable: { thread_id: randomUUID() } }
   );
 
   const overallScore = computeOverallScore(state.projectResults);

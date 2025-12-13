@@ -141,7 +141,7 @@
   --secondary-foreground: oklch(0.8717 0.0093 258.3382);
   --muted: oklch(0.2287 0.0074 67.4469);
   --muted-foreground: oklch(0.7137 0.0192 261.3246);
-  --accent: oklch(0.3896 0.0074 59.4734);
+  --accent: oklch(0.2621 0.0095 248.19);
   --accent-foreground: oklch(0.8717 0.0093 258.3382);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --border: oklch(0.3359 0.0077 59.4197);
@@ -152,7 +152,7 @@
   --chart-3: oklch(0.5106 0.2301 276.9656);
   --chart-4: oklch(0.4568 0.2146 277.0229);
   --chart-5: oklch(0.3984 0.1773 277.3662);
-  --sidebar: oklch(0.3359 0.0077 59.4197);
+  --sidebar: oklch(0.2621 0.0095 248.19);
   --sidebar-foreground: oklch(0.9288 0.0126 255.5078);
   --sidebar-primary: oklch(0.6801 0.1583 276.9349);
   --sidebar-primary-foreground: oklch(0.2244 0.0074 67.4370);
@@ -205,7 +205,11 @@
 }
 
 .markdown-content th {
+<<<<<<< Updated upstream
   @apply bg-gray-100 text-gray-700 font-bold p-3 border-b border-gray-200 text-sm;
+=======
+  @apply bg-gray-100 dark:bg-background  font-bold p-3 border-b border-gray-200 dark:border-neutral-800 text-sm;
+>>>>>>> Stashed changes
 }
 
 .markdown-content h1 {
@@ -222,11 +226,15 @@
 }
 
 .markdown-content td {
+<<<<<<< Updated upstream
   @apply p-3 border-b border-gray-100 text-sm align-top;
 }
 
 .markdown-content tr:hover {
   @apply bg-gray-50;
+=======
+  @apply p-3 border-b border-gray-100 dark:border-neutral-700 dark:bg-background  text-sm align-top;
+>>>>>>> Stashed changes
 }
 
 /* Style the Blockquotes for the Analysis section */

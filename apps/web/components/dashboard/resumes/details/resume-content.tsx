@@ -81,10 +81,8 @@ export const sections: Section[] = [
 
 export default function ResumeContent({
   resume,
-  review,
 }: {
   resume: ResumeWithOutJob;
-  review: ResumeReview;
 }) {
   return (
     <div>

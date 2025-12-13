@@ -23,7 +23,11 @@ export const extractResumeInfo = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeExtractionResponse>,
+<<<<<<< Updated upstream
     next: NextFunction,
+=======
+    next: NextFunction
+>>>>>>> Stashed changes
   ) => {
     const resume = req.file;
     // const { jobId } = req.body;
@@ -104,7 +108,11 @@ export const getAllResumes = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeListResponse>,
+<<<<<<< Updated upstream
     next: NextFunction,
+=======
+    next: NextFunction
+>>>>>>> Stashed changes
   ) => {
     const userId = req.user?._id;
 
@@ -115,7 +123,11 @@ export const getAllResumes = asyncHandler(
       owner: userId,
     })
       .select(
+<<<<<<< Updated upstream
         "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata createdAt updatedAt",
+=======
+        "firstName lastName fullName email phoneNumber resumeName sourceInfo summary location profiles resumeScore metadata createdAt updatedAt"
+>>>>>>> Stashed changes
       )
       .lean({ virtuals: true });
 
@@ -134,7 +146,11 @@ export const getResume = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeDetailResponse>,
+<<<<<<< Updated upstream
     next: NextFunction,
+=======
+    next: NextFunction
+>>>>>>> Stashed changes
   ) => {
     const resumeId = req.params.resumeId;
     const userId = req.user?._id;
@@ -148,7 +164,9 @@ export const getResume = asyncHandler(
       .populate("job")
       .lean({ virtuals: true });
 
-    if (!resume) return next(new AppError(400, "Resume not found."));
+    console.log("🚀 ~ resume:", resume);
+
+    if (!resume) return next(new AppError(404, "Resume not found."));
 
     res.status(200).json({
       success: true,
@@ -163,7 +181,11 @@ export const tailorResume = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeTailorResponse>,
+<<<<<<< Updated upstream
     next: NextFunction,
+=======
+    next: NextFunction
+>>>>>>> Stashed changes
   ) => {
     const { resumeId } = req.params;
     const userId = req.user?._id;
@@ -246,12 +268,14 @@ export const getResumeReview = asyncHandler(
   async (
     req: Request,
     res: Response<ResumeReviewLookupResponse>,
+<<<<<<< Updated upstream
     next: NextFunction,
+=======
+    next: NextFunction
+>>>>>>> Stashed changes
   ) => {
     const { resumeId } = req.params;
-    console.log("🚀 ~ resumeId:", resumeId);
     const userId = req.user?._id;
-    console.log("🚀 ~ userId:", userId);
 
     if (!resumeId) return next(new AppError(400, "Provide a resumeId"));
     if (!userId) return next(new AppError(401, "User not found resumeId"));
@@ -265,6 +289,7 @@ export const getResumeReview = asyncHandler(
       owner: userId,
     }).populate("suggestions");
 
+<<<<<<< Updated upstream
     if (!resumeReview) {
       res.status(200).json({
         success: true,
@@ -281,4 +306,16 @@ export const getResumeReview = asyncHandler(
       });
     }
   },
+=======
+    if (!resumeReview)
+      return next(new AppError(404, "Resume review not found."));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        review: resumeReview.toObject() as any,
+      },
+    });
+  }
+>>>>>>> Stashed changes
 );

@@ -101,6 +101,7 @@ const linkedinProfileSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
+    collection: "linkedin_profiles",
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   },

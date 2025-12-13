@@ -43,7 +43,7 @@ export default function ResumeVerificationCard({
               />
             ) : resume.sourceInfo.resumeName?.includes(".docx") ? (
               <IconFileTypeDocx
-                className="text-primary"
+                className="text-blue-500"
                 size={45}
                 stroke={1.25}
               />

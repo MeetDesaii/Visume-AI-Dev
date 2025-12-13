@@ -33,7 +33,7 @@ export default function VerfiedResumes() {
   });
 
   return (
-    <div className="bg-white p-4 rounded-2xl h-[calc(100vh_-_90px)] pt-10">
+    <div className="bg-white dark:bg-accent p-4 rounded-2xl h-[calc(100vh_-_90px)] pt-10">
       <div className="container mx-auto w-full max-w-7xl">
         <div className="flex justify-between items-center ">
           <h2 className="text-2xl">Verified Resumes</h2>
@@ -73,7 +73,7 @@ export default function VerfiedResumes() {
           <div>
             <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Link href="/dashboard/verified-resumes/verify-new">
-                <div className="bg-white border p-4 rounded-2xl h-full flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
+                <div className="bg-white dark:bg-accent border p-4 rounded-2xl h-full flex flex-col justify-center items-center cursor-pointer hover:border-neutral-400">
                   <div className="bg-primary/10 rounded-full size-15 grid place-content-center">
                     <IconPlus className="text-primary" />
                   </div>

@@ -75,7 +75,7 @@ export default function DashboardProvider({
     >
       <AppSidebar />
       <SidebarInset className="bg-background">
-        <header className="flex justify-between h-[50px] mt-2 mx-3 rounded-2xl bg-white shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b px-4 ">
+        <header className="flex justify-between h-[50px] mt-2 mx-3 rounded-2xl bg-white dark:bg-accent shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b px-4 ">
           <div className="flex items-center gap-2 ">
             <SidebarTrigger />
             <Separator

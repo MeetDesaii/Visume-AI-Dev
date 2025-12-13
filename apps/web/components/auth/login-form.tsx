@@ -131,7 +131,7 @@ export function LoginForm({
   return (
     <div
       className={cn(
-        "flex flex-col gap-6 bg-white border dark:bg-black/50 backdrop-blur-sm rounded-2xl p-6  drop-shadow-2xl",
+        "flex flex-col gap-6 bg-white dark:bg-accent border dark:bg-black/50 backdrop-blur-sm rounded-2xl p-6  drop-shadow-2xl",
         className
       )}
       {...props}

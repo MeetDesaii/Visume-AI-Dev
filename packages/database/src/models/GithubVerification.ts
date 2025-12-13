@@ -71,6 +71,7 @@ const githubVerificationSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
+    collection: "github_verifications",
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   },

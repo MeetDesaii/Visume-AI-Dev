@@ -60,7 +60,7 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md px-8 py-4">
+    <div className=" rounded-2xl shadow-md px-8 py-4">
       <div className="w-full max-w-md space-y-8 mb-8 ">
         <div className="text-center">
           <div className="mx-auto h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
